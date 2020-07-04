@@ -2,7 +2,8 @@
   (:gen-class)
   (:require [org.httpkit.server :as s]
             [compojure.core :refer :all]
-            [compojure.route :as cr]))
+            [compojure.route :as cr]
+            [vega.packages :as packages]))
 (defonce server (atom nil))
 
 (defn stop-server []
@@ -13,23 +14,10 @@
   {:status 200
    :body "Welcome to vega"})
 
-(defn serve-package-content
-  [id]
-  {:status 200 :body (slurp (str "lua/packages/" id ".lua"))})
 
-(defn package-info
-  "serve package info (e.g) md5 hash, last modified. print it out in body beause it's not convenient to read headers from openComputers"
-  [req] {:status 200 :body "unimplemented"})
-
-(defn package-repository
-  "host packages repositories"
-  [packages_root]
-  (fn [req] (cond
-              (= (-> req :query-string) "md5") package-info
-              (constantly true) (fn [req] (serve-package-content (-> req :params :id))))))
 (defroutes all-routes
   (GET "/" [] hello)
-  (GET "/packages/:id" [] package-repository)
+  (GET "/packages/:id" [] (packages/package-repository "lua/packages"))
   (cr/not-found {:status 404 :body "vega can't understand this :<"}))
 (defn start-server []
   (reset! server (s/run-server all-routes {:port 8080})))
