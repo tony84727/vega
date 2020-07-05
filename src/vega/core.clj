@@ -17,7 +17,7 @@
 
 (defroutes all-routes
   (GET "/" [] hello)
-  (GET "/packages/:id" [] (packages/package-repository "lua/packages"))
+  (GET "/packages/:id" [] (packages/package-repository "lua/packages/"))
   (cr/not-found {:status 404 :body "vega can't understand this :<"}))
 (defn start-server []
   (reset! server (s/run-server all-routes {:port 8080})))
