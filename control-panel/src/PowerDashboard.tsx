@@ -8,6 +8,7 @@ import {
 } from "react-vis";
 import { useMemo } from "react";
 import { makeStyles } from "@material-ui/styles";
+import ConsumptionBoard from "./ConsumptionBoard";
 
 interface IPowerDashboardProps {
   powerSourceData: SunburstPoint;
@@ -46,7 +47,7 @@ export default function PowerDashboard({
   );
   const styles = useStyles();
   return (
-    <Grid container={true}>
+    <Grid container={true} direction={"row"}>
       <Typography variant={"h3"} color={"primary"}>
         電力監控
       </Typography>
@@ -64,6 +65,9 @@ export default function PowerDashboard({
             items={legends}
             orientation={"horizontal"}
           />
+        </Grid>
+        <Grid>
+          <ConsumptionBoard />
         </Grid>
       </Grid>
     </Grid>
