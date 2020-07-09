@@ -1,11 +1,5 @@
-import { Grid, Typography } from "@material-ui/core";
-import {
-  DecorativeAxis,
-  DiscreteColorLegend,
-  Hint,
-  Sunburst,
-  SunburstPoint,
-} from "react-vis";
+import { Card, Grid, Typography } from "@material-ui/core";
+import { DiscreteColorLegend, Sunburst, SunburstPoint } from "react-vis";
 import { useMemo } from "react";
 import { makeStyles } from "@material-ui/styles";
 import ConsumptionBoard from "./ConsumptionBoard";
@@ -33,6 +27,9 @@ const useStyles = makeStyles({
   legend: {
     color: "#fff",
   },
+  chartContainer: {
+    padding: "16px",
+  },
 });
 
 export default function PowerDashboard({
@@ -52,20 +49,24 @@ export default function PowerDashboard({
         電力監控
       </Typography>
       <Grid container item>
-        <Sunburst
-          data={decorated}
-          height={250}
-          width={250}
-          hideRootNode={true}
-          animation={true}
-        />
-        <Grid>
-          <DiscreteColorLegend
-            className={styles.legend}
-            items={legends}
-            orientation={"horizontal"}
-          />
-        </Grid>
+        <Card className={styles.chartContainer}>
+          <Grid container>
+            <Sunburst
+              data={decorated}
+              height={250}
+              width={250}
+              hideRootNode={true}
+              animation={true}
+            />
+            <Grid>
+              <DiscreteColorLegend
+                className={styles.legend}
+                items={legends}
+                orientation={"horizontal"}
+              />
+            </Grid>
+          </Grid>
+        </Card>
         <Grid>
           <ConsumptionBoard />
         </Grid>
