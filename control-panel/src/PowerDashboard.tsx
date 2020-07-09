@@ -27,7 +27,7 @@ const useStyles = makeStyles({
   legend: {
     color: "#fff",
   },
-  chartContainer: {
+  padding: {
     padding: "16px",
   },
 });
@@ -45,11 +45,11 @@ export default function PowerDashboard({
   const styles = useStyles();
   return (
     <Grid container={true} direction={"row"}>
-      <Typography variant={"h3"} color={"primary"}>
+      <Typography variant={"h3"} color={"primary"} className={styles.padding}>
         電力監控
       </Typography>
       <Grid container item>
-        <Card className={styles.chartContainer}>
+        <Card className={styles.padding}>
           <Grid container>
             <Sunburst
               data={decorated}
