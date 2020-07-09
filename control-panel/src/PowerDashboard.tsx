@@ -2,7 +2,6 @@ import { Card, Grid, Typography } from "@material-ui/core";
 import { DiscreteColorLegend, Sunburst, SunburstPoint } from "react-vis";
 import { useMemo } from "react";
 import { makeStyles } from "@material-ui/styles";
-import ConsumptionBoard from "./ConsumptionBoard";
 
 interface IPowerDashboardProps {
   powerSourceData: SunburstPoint;
@@ -10,16 +9,25 @@ interface IPowerDashboardProps {
 
 const colors = {
   神龍反應堆: "#ff6620",
-  太陽能: "#fff749",
+  太陽能: "#dada38",
   偷鄰居的: "#e426ff",
 };
 
 function decorateData(powerSourceData: SunburstPoint) {
   return {
     ...powerSourceData,
-    children: powerSourceData.children.map((c) =>
-      c.title in colors ? { ...c, style: { fill: colors[c.title] } } : c
-    ),
+    children: powerSourceData.children
+      .map((c) =>
+        c.title in colors ? { ...c, style: { fill: colors[c.title] } } : c
+      )
+      .map((x) => ({
+        ...x,
+        label: x.title,
+        dontRotateLabel: true,
+        labelStyle: {
+          fill: "#fff",
+        },
+      })),
   };
 }
 
@@ -54,7 +62,7 @@ export default function PowerDashboard({
             <Sunburst
               data={decorated}
               height={250}
-              width={250}
+              width={300}
               hideRootNode={true}
               animation={true}
             />
