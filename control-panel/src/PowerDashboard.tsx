@@ -67,9 +67,6 @@ export default function PowerDashboard({
             </Grid>
           </Grid>
         </Card>
-        <Grid>
-          <ConsumptionBoard />
-        </Grid>
       </Grid>
     </Grid>
   );
