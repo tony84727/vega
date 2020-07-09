@@ -16,8 +16,7 @@
     "react-dom": "16.13.1",
     "react-vis": "^1.11.7",
     "rxjs": "^6.6.0",
-    "typescript": "^3.9.6",
-    "victory": "^35.0.3"
+    "typescript": "^3.9.6"
   },
   "devDependencies": {
     "@types/react-vis": "^1.11.1",
