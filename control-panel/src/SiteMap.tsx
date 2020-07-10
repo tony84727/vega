@@ -1,5 +1,5 @@
 import { Card } from "@material-ui/core";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface Site {
   coordinate: [number, number];
@@ -19,14 +19,44 @@ interface ISiteMapProps {
   height?: number;
 }
 
+interface ISvgTextProps {
+  background: string;
+  children: string;
+}
+
+function BackgroundRemovalFilterDef({
+  backgroundColor,
+}: {
+  backgroundColor: string;
+}) {
+  return (
+    <filter x="0" y="0" width="1" height="1" id="removebackground">
+      <feFlood flood-color={backgroundColor} />
+      <feComposite in="SourceGraphic" />
+    </filter>
+  );
+}
+
+function SvgText({ children }: ISvgTextProps) {
+  const id = useMemo(() => `site-text-${children}`, [children]);
+  return (
+    <>
+      <use xlinkHref={`#${id}`} filter="url(#removebackground)" />
+      <text id={id} textAnchor={"middle"}>
+        {children}
+      </text>
+    </>
+  );
+}
+
 function Site({ name, color }: { name: string; color: string }) {
   return (
     <>
       <circle r={15} stroke={color} fill={"transparent"} strokeWidth={2} />
       <circle r={10} />
-      <text textAnchor={"middle"} y={30}>
-        {name}
-      </text>
+      <g transform={"translate(0, 30)"}>
+        <SvgText background={"#fff"}>{name}</SvgText>
+      </g>
     </>
   );
 }
@@ -51,6 +81,7 @@ export default function SiteMap({
   return (
     <Card>
       <svg width={width} height={height}>
+        <BackgroundRemovalFilterDef backgroundColor={"#0075ff"} />
         {sites.map((s) => (
           <g
             fill={siteColor}
