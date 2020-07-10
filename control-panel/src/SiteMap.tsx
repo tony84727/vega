@@ -61,6 +61,25 @@ function Site({ name, color }: { name: string; color: string }) {
   );
 }
 
+interface ISiteMapLinkProps {
+  from: [number, number];
+  to: [number, number];
+  color: string;
+}
+
+function SiteMapLink({ from, to, color }: ISiteMapLinkProps) {
+  return (
+    <line
+      x1={from[0]}
+      y1={from[1]}
+      x2={to[0]}
+      y2={to[1]}
+      stroke={color}
+      strokeWidth={2}
+    />
+  );
+}
+
 export default function SiteMap({
   sites,
   powerLinks,
@@ -94,14 +113,11 @@ export default function SiteMap({
           </g>
         ))}
         {links.map((l) => (
-          <line
-            key={l.key}
-            x1={l.from[0] + width / 2}
-            y1={l.from[1] + height / 2}
-            x2={l.to[0] + width / 2}
-            y2={l.to[1] + height / 2}
-            stroke={siteColor}
-            strokeWidth={2}
+          <SiteMapLink
+            key={`link-${l.from}-${l.to}`}
+            color={siteColor}
+            from={[l.from[0] + width / 2, l.from[1] + height / 2]}
+            to={[l.to[0] + width / 2, l.to[1] + height / 2]}
           />
         ))}
       </svg>
