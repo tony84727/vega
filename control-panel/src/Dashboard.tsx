@@ -1,7 +1,7 @@
 import { IDashboardProps } from "./IDashboardProps";
 import { Grid, Typography } from "@material-ui/core";
 import { PowerSourcePanel } from "./PowerSourcePanel";
-import SiteMap from "./SiteMap";
+import SiteMap from "./SiteMap/SiteMap";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles({
@@ -10,7 +10,7 @@ const useStyles = makeStyles({
   },
 });
 
-export function Dashboard({ powerSourceData, sites, links }: IDashboardProps) {
+export function Dashboard({ powerSourceData, siteData }: IDashboardProps) {
   const styles = useStyles();
   return (
     <Grid container>
@@ -21,8 +21,8 @@ export function Dashboard({ powerSourceData, sites, links }: IDashboardProps) {
         <Grid item className={styles.panelMargin}>
           <PowerSourcePanel powerSourceData={powerSourceData} />
         </Grid>
-        <Grid item className={styles.parnelMargin}>
-          <SiteMap sites={sites} powerLinks={links} />
+        <Grid item className={styles.panelMargin}>
+          <SiteMap data={siteData} />
         </Grid>
       </Grid>
     </Grid>

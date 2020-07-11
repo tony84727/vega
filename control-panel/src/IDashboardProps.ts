@@ -1,8 +1,7 @@
 import { SunburstPoint } from "react-vis";
-import { Link, Site } from "./SiteMap";
+import ISiteMapData from "./SiteMap/ISiteMapData";
 
 export interface IDashboardProps {
   powerSourceData: SunburstPoint;
-  sites: Site[];
-  links: Link[];
+  siteData: ISiteMapData;
 }

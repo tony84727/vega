@@ -1,4 +1,4 @@
-import { Link, Site } from "./SiteMap";
+import { Link, Site } from "./SiteMap/SiteMap";
 
 export const sites: Site[] = [
   {
