@@ -6,6 +6,7 @@ import { makeStyles } from "@material-ui/core/styles";
 const useStyles = makeStyles({
   container: {
     marginRight: "8px",
+    marginBottom: "8px",
   },
   content: {
     padding: "8px",
@@ -15,13 +16,11 @@ const useStyles = makeStyles({
 export default function Panel({ title, children }: IPanelProps) {
   const styles = useStyles();
   return (
-    <Grid container className={styles.container}>
-      <Card className={styles.content}>
-        <Typography variant={"subtitle1"} color={"secondary"}>
-          {title}
-        </Typography>
-        {children}
-      </Card>
-    </Grid>
+    <Card className={styles.content}>
+      <Typography variant={"subtitle1"} color={"secondary"}>
+        {title}
+      </Typography>
+      {children}
+    </Card>
   );
 }
