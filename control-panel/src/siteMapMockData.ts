@@ -1,6 +1,7 @@
-import { Link, Site } from "./SiteMap/SiteMap";
+import { ISite } from "./SiteMap/ISite";
+import { IPowerLink } from "./SiteMap/IPowerLink";
 
-export const sites: Site[] = [
+export const sites: ISite[] = [
   {
     name: "核能反應爐",
     coordinate: [50, 40],
@@ -23,7 +24,7 @@ export const sites: Site[] = [
   },
 ];
 
-export const links: Link[] = [
+export const powerLinks: IPowerLink[] = [
   {
     flow: 100000,
     from: 0,

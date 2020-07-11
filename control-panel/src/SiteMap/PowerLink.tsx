@@ -18,7 +18,7 @@ export default function PowerLink({ from, to, color, flow }: IPowerLinkProps) {
         strokeWidth={2}
       />
       <Text x={middle[0]} y={middle[1]}>
-        {flow.toString()} RF/t
+        {`${flow} RF/t`}
       </Text>
     </>
   );
