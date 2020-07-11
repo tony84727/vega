@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { of } from "rxjs";
 import { SunburstPoint } from "react-vis";
-import { Dashboard } from "./Dashboard";
+import { Dashboard } from "./Dashboard/Dashboard";
 import { links as powerLinks, sites } from "./siteMapMockData";
 
 export default function MockDashboard() {

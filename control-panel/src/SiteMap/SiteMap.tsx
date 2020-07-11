@@ -23,30 +23,28 @@ export default function SiteMap({
     [powerLinks, sites]
   );
   return (
-    <Card>
-      <svg width={width} height={height}>
-        <BackgroundRemovalFilterDef backgroundColor={"#0075ff"} />
-        {sites.map((s) => (
-          <g
-            fill={siteColor}
-            key={s.name}
-            transform={`translate(${s.coordinate[0] + width / 2}, ${
-              s.coordinate[1] + height / 2
-            })`}
-          >
-            <Site name={s.name} color={siteColor} />
-          </g>
-        ))}
-        {links.map((l) => (
-          <PowerLink
-            key={`link-${l.from}-${l.to}`}
-            color={siteColor}
-            from={[l.from[0] + width / 2, l.from[1] + height / 2]}
-            to={[l.to[0] + width / 2, l.to[1] + height / 2]}
-            flow={l.flow}
-          />
-        ))}
-      </svg>
-    </Card>
+    <svg width={width} height={height}>
+      <BackgroundRemovalFilterDef backgroundColor={"#0075ff"} />
+      {sites.map((s) => (
+        <g
+          fill={siteColor}
+          key={s.name}
+          transform={`translate(${s.coordinate[0] + width / 2}, ${
+            s.coordinate[1] + height / 2
+          })`}
+        >
+          <Site name={s.name} color={siteColor} />
+        </g>
+      ))}
+      {links.map((l) => (
+        <PowerLink
+          key={`link-${l.from}-${l.to}`}
+          color={siteColor}
+          from={[l.from[0] + width / 2, l.from[1] + height / 2]}
+          to={[l.to[0] + width / 2, l.to[1] + height / 2]}
+          flow={l.flow}
+        />
+      ))}
+    </svg>
   );
 }

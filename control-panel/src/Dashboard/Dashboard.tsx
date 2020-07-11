@@ -1,8 +1,9 @@
-import { IDashboardProps } from "./IDashboardProps";
+import { IDashboardProps } from "../IDashboardProps";
 import { Grid, Typography } from "@material-ui/core";
-import { PowerSourcePanel } from "./PowerSourcePanel";
-import SiteMap from "./SiteMap/SiteMap";
+import SiteMap from "../SiteMap/SiteMap";
 import { makeStyles } from "@material-ui/core/styles";
+import Panel from "./Panel";
+import PowerSourceChart from "../PowerSourceChart";
 
 const useStyles = makeStyles({
   panelMargin: {
@@ -18,11 +19,15 @@ export function Dashboard({ powerSourceData, siteData }: IDashboardProps) {
         儀表板
       </Typography>
       <Grid container direction={"row"} wrap={"nowrap"}>
-        <Grid item className={styles.panelMargin}>
-          <PowerSourcePanel powerSourceData={powerSourceData} />
+        <Grid item>
+          <Panel title={"電力來源"}>
+            <PowerSourceChart powerSourceData={powerSourceData} />
+          </Panel>
         </Grid>
-        <Grid item className={styles.panelMargin}>
-          <SiteMap data={siteData} />
+        <Grid item>
+          <Panel title={"基礎設施"}>
+            <SiteMap data={siteData} />
+          </Panel>
         </Grid>
       </Grid>
     </Grid>
