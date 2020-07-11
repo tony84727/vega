@@ -3,23 +3,23 @@ import { Link, Site } from "./SiteMap";
 export const sites: Site[] = [
   {
     name: "核能反應爐",
-    coordinate: [160, 40],
+    coordinate: [50, 40],
   },
   {
     name: "自動工廠",
-    coordinate: [230, 10],
+    coordinate: [-130, 200],
   },
   {
     name: "Vega實驗室",
-    coordinate: [250, -149],
+    coordinate: [150, -149],
   },
   {
     name: "玄學研究所",
-    coordinate: [98, -1],
+    coordinate: [-98, -1],
   },
   {
     name: "太空中心",
-    coordinate: [77, -100],
+    coordinate: [0, -140],
   },
 ];
 

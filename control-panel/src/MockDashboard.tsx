@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { of } from "rxjs";
 import { SunburstPoint } from "react-vis";
 import PowerDashboard from "./PowerDashboard";
+import { Dashboard } from "./Dashboard";
+import { links, sites } from "./siteMapMockData";
 
-export default function MockPowerDashboard() {
+export default function MockDashboard() {
   const [powerSourceData, setPowerSourceData] = useState<SunburstPoint>({
     title: "root",
     size: 0,
@@ -30,5 +32,7 @@ export default function MockPowerDashboard() {
     }).subscribe(setPowerSourceData);
     return () => sub.unsubscribe();
   }, []);
-  return <PowerDashboard powerSourceData={powerSourceData} />;
+  return (
+    <Dashboard powerSourceData={powerSourceData} sites={sites} links={links} />
+  );
 }

@@ -1,5 +1,5 @@
 import { Card } from "@material-ui/core";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { SVGAttributes, useMemo } from "react";
 
 export interface Site {
   coordinate: [number, number];
@@ -19,7 +19,7 @@ interface ISiteMapProps {
   height?: number;
 }
 
-interface ISvgTextProps {
+interface ISvgTextProps extends SVGAttributes<SVGTextElement> {
   background: string;
   children: string;
 }
@@ -37,12 +37,12 @@ function BackgroundRemovalFilterDef({
   );
 }
 
-function SvgText({ children }: ISvgTextProps) {
+function SvgText({ children, ...rest }: ISvgTextProps) {
   const id = useMemo(() => `site-text-${children}`, [children]);
   return (
     <>
       <use xlinkHref={`#${id}`} filter="url(#removebackground)" />
-      <text id={id} textAnchor={"middle"}>
+      <text id={id} textAnchor={"middle"} {...rest}>
         {children}
       </text>
     </>
@@ -64,19 +64,29 @@ function Site({ name, color }: { name: string; color: string }) {
 interface ISiteMapLinkProps {
   from: [number, number];
   to: [number, number];
+  flow: number;
   color: string;
 }
 
-function SiteMapLink({ from, to, color }: ISiteMapLinkProps) {
+function SiteMapLink({ from, to, color, flow }: ISiteMapLinkProps) {
+  const middle = useMemo(() => [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2], [
+    from,
+    to,
+  ]);
   return (
-    <line
-      x1={from[0]}
-      y1={from[1]}
-      x2={to[0]}
-      y2={to[1]}
-      stroke={color}
-      strokeWidth={2}
-    />
+    <>
+      <line
+        x1={from[0]}
+        y1={from[1]}
+        x2={to[0]}
+        y2={to[1]}
+        stroke={color}
+        strokeWidth={2}
+      />
+      <SvgText background={"#fff"} x={middle[0]} y={middle[1]}>
+        {flow.toString()} RF/t
+      </SvgText>
+    </>
   );
 }
 
@@ -118,6 +128,7 @@ export default function SiteMap({
             color={siteColor}
             from={[l.from[0] + width / 2, l.from[1] + height / 2]}
             to={[l.to[0] + width / 2, l.to[1] + height / 2]}
+            flow={l.flow}
           />
         ))}
       </svg>

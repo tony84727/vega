@@ -1,6 +1,8 @@
 import { Card, Grid, Typography } from "@material-ui/core";
 import PowerSourceChart, { IPowerSourceChartProps } from "./PowerSourceChart";
 import { makeStyles } from "@material-ui/core/styles";
+import SiteMap from "./SiteMap";
+import { links, sites } from "./siteMapMockData";
 
 const useStyles = makeStyles({
   container: {
@@ -21,6 +23,7 @@ export default function PowerDashboard({
         <Card className={styles.container}>
           <PowerSourceChart powerSourceData={powerSourceData} />
         </Card>
+        <SiteMap sites={sites} powerLinks={links} />
       </Grid>
     </Grid>
   );
