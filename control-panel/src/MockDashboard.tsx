@@ -3,6 +3,8 @@ import { of } from "rxjs";
 import { SunburstPoint } from "react-vis";
 import { Dashboard } from "./Dashboard/Dashboard";
 import { powerLinks, sites } from "./siteMapMockData";
+import { generatorSwitches, switches } from "./switchBoardMockData";
+import { draconicReactors } from "./draconicReactorMockData";
 
 export default function MockDashboard() {
   const [powerSourceData, setPowerSourceData] = useState<SunburstPoint>({
@@ -35,6 +37,9 @@ export default function MockDashboard() {
     <Dashboard
       powerSourceData={powerSourceData}
       siteData={{ sites, powerLinks }}
+      infraSwitches={switches}
+      generatorSwitches={generatorSwitches}
+      draconicReactors={draconicReactors}
     />
   );
 }
