@@ -3,7 +3,7 @@
 
 (defn package-info
   "serve package info (e.g) md5 hash, last modified. print it out in body beause it's not convenient to read headers from openComputers"
-  [root id] {:status 200 :body "unimplemented"})
+  [root id] {:status 200 :body (md5 (package-file root id))})
 
 (defn md5 [^String s]
   (let [algorithm (MessageDigest/getInstance "MD5")
