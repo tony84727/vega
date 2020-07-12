@@ -49,34 +49,41 @@ function getPackageMD5(id)
   return httpGet(packageURLWithQueryString(packageRepository, id, "md5"))
 end
 
-function getCurrentChecksum()
-  local file = filesystem.open("/home/bin/loader.lua")
+function getChecksum(path)
+  local file = filesystem.open(path)
   local header = file:read(50)
+  file:close()
   return string.sub(header, 5, string.find(header, "]") - 1)
 end
 
-function selfUpdate()
-  local success = filesystem.copy("/home/bin/loader.lua", "/home/bin/loader.old.lua")
-  if not success then
-    print("failed to backup original version")
-    return
+function checkPackage(package)
+  local exists = filesystem.exists("/home/bin/" .. package .. ".lua")
+  if exists then
+    local remoteChecksum = getPackageMD5("loader")
+    local localChecksum = getCurrentChecksum()
+    print("remote checksum: " .. remoteChecksum)
+    print("local checksum: " .. localChecksum)
+    if remoteChecksum == localChecksum then
+      print("update-to-date")
+      return
+    end
+    print("new version of " .. package .. "available, updating ... ")
+    -- backup
+    local success = filesystem.copy("/home/bin/" .. package .. ".lua", "/home/bin/" .. package .. ".old.lua")
+    if not success then
+      print("failed to backup original version of " .. package)
+      return
+    end
   end
-  fetchPackage("loader")
-  print("self update done.")
+  fetchPackage(package)
+  print("done")
 end
 
 function selfCheck()
-  print("starting self-update checking")
-  local remoteChecksum = getPackageMD5("loader")
-  local localChecksum = getCurrentChecksum()
-  print("remote checksum: " .. remoteChecksum)
-  print("local checksum: " .. localChecksum)
-  if remoteChecksum == localChecksum then
-    print("update-to-date")
-    return
-  end
-  print("new version available, updating ... ")
-  selfUpdate()
+  checkPackage("loader")
 end
 
 selfCheck()
+
+local args = {...}
+checkPackage(args[1])
