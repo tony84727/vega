@@ -1,9 +1,6 @@
 (ns vega.packages
+  (:require [taoensso.timbre :as l])
   (:import [java.security MessageDigest]))
-
-(defn package-info
-  "serve package info (e.g) md5 hash, last modified. print it out in body beause it's not convenient to read headers from openComputers"
-  [root id] {:status 200 :body (md5 (package-file root id))})
 
 (defn md5 [^String s]
   (let [algorithm (MessageDigest/getInstance "MD5")
@@ -16,6 +13,10 @@
   (fn [req] (handler (-> req :params :id))))
 
 (defn package-file [root id] (slurp (str root id ".lua")))
+
+(defn package-info
+  "serve package info (e.g) md5 hash, last modified. print it out in body beause it's not convenient to read headers from openComputers"
+  [root id] {:status 200 :body (md5 (package-file root id))})
 
 (defn package-header [content] (str "--[[" (md5 content) "]]--\n" content))
 
