@@ -1,8 +1,26 @@
 local internet = require("internet")
 local filesystem = require("filesystem")
 local loaderPackageID = "loader"
+
+function loadVegaConfig()
+  if filesystem.exists("/home/vega.host") then
+    local file, err = filesystem.open("/home/vega.host")
+    if err ~= nil then
+      print("failed to load vega.host configuration")
+      return ""
+    end
+    host = file:read(1024)
+    file:close()
+    return host
+  end
+  return ""
+end
+
 local vega = "http://localhost:8080/"
-local packageRepository = vega .. "packages/"
+local configHost = loadVegaConfig()
+if string.len(configHost) > 0 then
+  vega = configHost
+end
 
 function packageURLWithQueryString(repository, id, queryString)
   local url = repository  .. id
@@ -11,7 +29,7 @@ function packageURLWithQueryString(repository, id, queryString)
   end
   return url
 end
-
+local packageRepository = vega .. "packages/"
 function packageURL(repository, id)
   return packageURLWithQueryString(repository, id, '')
 end
@@ -50,24 +68,38 @@ function getPackageMD5(id)
 end
 
 function getChecksum(path)
-  local file = filesystem.open(path)
+  local file, err = filesystem.open(path)
+  if err ~= nil then
+    print("unable to access " .. path .. " " .. err)
+    return ""
+  end
   local header = file:read(50)
+  if header == nil then
+    return ""
+  end
   file:close()
-  return string.sub(header, 5, string.find(header, "]") - 1)
+  local checksumEnd = string.find(header, "]")
+  if checksumEnd == nil then
+    return ""
+  else
+    checksumEnd = checksumEnd - 1
+  end
+  return string.sub(header, 5, checksumEnd)
 end
 
 function checkPackage(package)
-  local exists = filesystem.exists("/home/bin/" .. package .. ".lua")
+  local packageFile = "/home/bin/" .. package .. ".lua"
+  local exists = filesystem.exists(packageFile)
   if exists then
     local remoteChecksum = getPackageMD5("loader")
-    local localChecksum = getCurrentChecksum()
+    local localChecksum = getChecksum(packageFile)
     print("remote checksum: " .. remoteChecksum)
     print("local checksum: " .. localChecksum)
     if remoteChecksum == localChecksum then
       print("update-to-date")
       return
     end
-    print("new version of " .. package .. "available, updating ... ")
+    print("new version of " .. package .. " available, updating ... ")
     -- backup
     local success = filesystem.copy("/home/bin/" .. package .. ".lua", "/home/bin/" .. package .. ".old.lua")
     if not success then
@@ -86,4 +118,6 @@ end
 selfCheck()
 
 local args = {...}
-checkPackage(args[1])
+if args[1] ~= nil then
+  checkPackage(args[1])
+end
