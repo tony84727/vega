@@ -1,6 +1,6 @@
 (defproject vega "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Centralized Minecraft base controller"
+  :url "https://github.com/tony84727/vega"
   :license {:name "GNU AFFERO GENERAL PUBLIC LICENSE"
             :Url "https://www.gnu.org/licenses/agpl-3.0.en.html"}
   :dependencies [[org.clojure/clojure "1.10.1"]
