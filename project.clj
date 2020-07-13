@@ -6,7 +6,12 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [http-kit "2.3.0"]
                  [compojure "1.6.1"]
-                 [com.taoensso/timbre "4.10.0"]]
+                 [com.taoensso/timbre "4.10.0"]
+                 [com.google.protobuf/protobuf-java "3.12.2"]]
+  :plugins [[lein-protobuf "0.5.0"]]
+;;  :protoc-version "3.12.3"
+;;  :protoc-grpc {:version "1.30.1"}
+  
   :main ^:skip-aot vega.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
