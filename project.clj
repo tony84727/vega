@@ -7,7 +7,10 @@
                  [http-kit "2.3.0"]
                  [compojure "1.6.1"]
                  [com.taoensso/timbre "4.10.0"]
-                 [com.google.protobuf/protobuf-java "3.12.2"]]
+                 [com.google.protobuf/protobuf-java "3.12.2"]
+                 [io.grpc/grpc-netty-shaded "1.30.2" :exclusions [io.grpc/grpc-core,io.grpc/grpc-api]]
+                 [io.grpc/grpc-protobuf "1.30.2"]
+                 [io.grpc/grpc-stub "1.30.2"]]
   :plugins [[lein-protobuf "0.5.0"]]
 ;;  :protoc-version "3.12.3"
 ;;  :protoc-grpc {:version "1.30.1"}
