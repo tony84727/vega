@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package vega;
+option java_package = "com.github.tony84727.vega";
+
+message Output {
+  string content = 1;
+};
+
+service Debugging {
+  rpc Listen(google.protobuf.Empty) returns (stream Output);
+}

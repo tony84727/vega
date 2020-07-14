@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package vega;
-
-message Output {
-  string content = 1;
-};
