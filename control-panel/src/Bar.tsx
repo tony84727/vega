@@ -14,6 +14,6 @@ const useStyles = makeStyles({
 
 export default function Bar(props: IBarProps) {
   const { highContrast, barColor, ...rest } = props;
-  const styles = useStyles(props);
+  const styles = useStyles(props)
   return <LinearProgress classes={styles} {...rest} />;
 }
