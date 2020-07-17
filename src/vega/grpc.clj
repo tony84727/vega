@@ -5,8 +5,14 @@
             DebugConsole$Output]))
 
 (defn debug-text [text] (-> (DebugConsole$Output/newBuilder)
-                            (.setMessage text)
+                            (.setContent text)
                             (.build)))
 
-(reify DebuggingImplBase
-  (listen [this _ response] (.onNext response (debug-text "hi"))))
+
+
+(defn debugging-service [] (proxy
+                               [DebuggingGrpc$DebuggingImplBase] []
+                             (listen [_ _ response] (-> response
+                                                        (.onNext (debug-text "hi"))
+                                                        (.onComplete)))))
+(def grpc-port 5000)
