@@ -40,6 +40,7 @@ export default function MockDashboard() {
       infraSwitches={switches}
       generatorSwitches={generatorSwitches}
       draconicReactors={draconicReactors}
+      messageLines={["first line", "second line", "third line"]}
     />
   );
 }

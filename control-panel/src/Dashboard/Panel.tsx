@@ -4,10 +4,6 @@ import { Grid, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles({
-  container: {
-    marginRight: "8px",
-    marginBottom: "8px",
-  },
   content: {
     padding: "8px",
   },
