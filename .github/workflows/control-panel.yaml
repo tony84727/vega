@@ -27,7 +27,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Lint
-        run: npm prettier --check '**/*.{ts,tsx,js,scss,css}'
+        run: npm run prettier --check '**/*.{ts,tsx,js,scss,css}'
       - run: npm install
         working-directory: control-panel
       - run: npm run build
