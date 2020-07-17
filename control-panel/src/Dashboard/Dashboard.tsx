@@ -47,7 +47,7 @@ export function Dashboard({
           </Grid>
           <Grid item container spacing={1}>
             {draconicReactors.map((reactor) => (
-              <Grid item md={6} lg={3}>
+              <Grid key={reactor.name} item md={6} lg={3}>
                 <DraconicReactorPanel {...reactor} />
               </Grid>
             ))}
