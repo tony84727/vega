@@ -6,7 +6,7 @@ import PowerSourceChart from "../PowerSourceChart";
 import SwitchBoard from "../SwitchBoard/SwitchBoard";
 import { makeStyles } from "@material-ui/core/styles";
 import DraconicReactorPanel from "./DraconicReactorPanel";
-import MessageDisplay from "../MessageDisplay";
+import MessageDisplay from "../MessageDisplay/MessageDisplay";
 
 const useStyles = makeStyles({
   container: {
