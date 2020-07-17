@@ -15,14 +15,12 @@
     "next": "9.4.4",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "react-virtualized-auto-sizer": "^1.0.2",
     "react-vis": "^1.11.7",
     "react-window": "^1.8.5",
     "rxjs": "^6.6.0",
     "typescript": "^3.9.6"
   },
   "devDependencies": {
-    "@types/react-virtualized-auto-sizer": "^1.0.0",
     "@types/react-vis": "^1.11.1",
     "@types/react-window": "^1.8.2",
     "@types/victory": "^33.1.4",
