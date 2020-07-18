@@ -9,4 +9,5 @@ export interface IDashboardProps {
   infraSwitches: ISwitch[];
   generatorSwitches: ISwitch[];
   draconicReactors: IDraconicReactorPanelProps[];
+  messageLines: string[];
 }

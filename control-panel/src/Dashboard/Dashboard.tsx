@@ -6,6 +6,7 @@ import PowerSourceChart from "../PowerSourceChart";
 import SwitchBoard from "../SwitchBoard/SwitchBoard";
 import { makeStyles } from "@material-ui/core/styles";
 import DraconicReactorPanel from "./DraconicReactorPanel";
+import MessageDisplay from "../MessageDisplay/MessageDisplay";
 
 const useStyles = makeStyles({
   container: {
@@ -19,15 +20,23 @@ export function Dashboard({
   infraSwitches,
   generatorSwitches,
   draconicReactors,
+  messageLines,
 }: IDashboardProps) {
   const styles = useStyles();
   return (
     <Grid container className={styles.container}>
-      <Grid container direction={"row"} justify={"space-evenly"} spacing={2}>
-        <Grid item xs={12} md={3}>
-          <Panel title={"電力來源"}>
-            <PowerSourceChart powerSourceData={powerSourceData} />
-          </Panel>
+      <Grid container direction={"row"} spacing={2}>
+        <Grid container item xs={12} md={3} direction={"column"} spacing={2}>
+          <Grid item>
+            <Panel title={"電力來源"}>
+              <PowerSourceChart powerSourceData={powerSourceData} />
+            </Panel>
+          </Grid>
+          <Grid item>
+            <Panel title={"訊息"}>
+              <MessageDisplay lines={messageLines} />
+            </Panel>
+          </Grid>
         </Grid>
         <Grid item xs={12} md={4}>
           <Panel title={"基礎設施"}>
@@ -47,7 +56,7 @@ export function Dashboard({
           </Grid>
           <Grid item container spacing={1}>
             {draconicReactors.map((reactor) => (
-              <Grid item md={6} lg={3}>
+              <Grid key={reactor.name} item md={6} lg={3}>
                 <DraconicReactorPanel {...reactor} />
               </Grid>
             ))}
