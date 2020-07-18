@@ -36,7 +36,7 @@ export default function MockDashboard() {
     }).subscribe(setPowerSourceData);
     return () => sub.unsubscribe();
   }, []);
-  const { message$ } = useWebsocket("ws://localhost:8080");
+  const { message$ } = useWebsocket("ws://localhost:8080/websocket");
   const [line$] = useState(() => message$.pipe(map((x) => x.data)));
   const lines = useDebuggingConsole(line$);
   return (
