@@ -36,9 +36,9 @@ export default function MockDashboard() {
     }).subscribe(setPowerSourceData);
     return () => sub.unsubscribe();
   }, []);
-  const { websocket$ } = useWebsocket("ws://localhost:8080");
-  const [line$] = useState(() => websocket$);
-  const lines = useDebuggingConsole(line$ as Observable<string>);
+  const { message$ } = useWebsocket("ws://localhost:8080");
+  const [line$] = useState(() => message$.pipe(map((x) => x.data)));
+  const lines = useDebuggingConsole(line$);
   return (
     <Dashboard
       powerSourceData={powerSourceData}
