@@ -31,7 +31,7 @@
 
 (defn restart-server []
   (stop-server)
-                            (start-server))
+  (start-server))
 
 (defn -main
   "I don't do a whole lot ... yet."
