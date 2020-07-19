@@ -8,6 +8,7 @@
                  [http-kit "2.3.0"]
                  [compojure "1.6.1"]
                  [com.taoensso/timbre "4.10.0"]]
+  :plugins [[lein-cljfmt "0.6.8"]]
   :main ^:skip-aot vega.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
