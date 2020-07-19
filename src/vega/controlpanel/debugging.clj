@@ -3,7 +3,6 @@
             [clojure.core.async :as async]
             [ring.util.request :refer [body-string]]))
 
-
 (defn new-pub [input-ch] (async/pub input-ch (constantly nil)))
 
 (defn handler [pub request]

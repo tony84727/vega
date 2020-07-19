@@ -5,7 +5,7 @@
 (defn md5 [^String s]
   (let [algorithm (MessageDigest/getInstance "MD5")
         raw       (.digest algorithm (.getBytes s))]
-        (format "%032x" (BigInteger. 1 raw))))
+    (format "%032x" (BigInteger. 1 raw))))
 
 (defn id-handler
   "wrapper for handlers that only want the id of the requesting package"
