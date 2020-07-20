@@ -7,7 +7,9 @@
                  [org.clojure/core.async "1.2.603"]
                  [http-kit "2.3.0"]
                  [compojure "1.6.1"]
-                 [com.taoensso/timbre "4.10.0"]]
+                 [com.taoensso/timbre "4.10.0"]
+                 [com.datastax.oss/java-driver-core "4.7.2"]
+                 [ragtime "0.8.0"]]
   :plugins [[lein-cljfmt "0.6.8"]]
   :main ^:skip-aot vega.core
   :target-path "target/%s"
