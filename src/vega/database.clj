@@ -40,6 +40,17 @@
   (map #(.getString % "keyspace_name")
        (query session "SELECT * FROM system_schema.keyspaces")))
 
+(defn column-names
+  "get the column names of a row"
+  [row]
+  (map (fn [c] (.getName c)) (.getColumnDefinitions row)))
+
+(defn get-fields
+  "retrieve specific fields out of row"
+  [fields row]
+
+  (reduce (fn [acc c] (conj acc (.getObject row c))) [] fields))
+
 (defrecord CassandraDataStore [session keyspace-name]
   rgp/DataStore
   (add-migration-id [_ id]
@@ -53,5 +64,5 @@
      session
      "DELETE FROM %s.migrations WHERE id = ?" id))
   (applied-migration-ids [_]
-    (query )))
+    (query)))
 
