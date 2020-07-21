@@ -34,6 +34,12 @@
    (format "INSERT INTO %s (?) VALUES (?)" table)
    fields values))
 
+(defn insert-id-into-table [table id] (insert-into-table table '("id") '(id)))
+
+(defn list-keyspaces [session]
+  (map #(.getString % "keyspace_name")
+       (query session "SELECT * FROM system_schema.keyspaces")))
+
 (defrecord CassandraDataStore [session keyspace-name]
   rgp/DataStore
   (add-migration-id [_ id]
@@ -47,5 +53,5 @@
      session
      "DELETE FROM %s.migrations WHERE id = ?" id))
   (applied-migration-ids [_]
-    ()))
+    (query )))
 
