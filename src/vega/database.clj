@@ -17,18 +17,19 @@
   (alia/execute session
                 (create-migration-table-query keyspace)))
 
+(defn insert-migration-id-table-query [keyspace id]
+  (list (alia/prepare session (format "INSERT INTO %s.ragtime_migrations (id, created_at) VALUES (?, toUnixTimestamp(now()))" keyspace)) {:values [id]}))
+
+(defn list-migration-id-query [keyspace] (format "SELECT id FROM %s.ragtime_migrations" keyspace))
+
 (defrecord CassandraDataStore [session keyspace-name]
   rgp/DataStore
   (add-migration-id [_ id]
     (ensure-migration-table! keyspace-name)
-    (alia/execute
-     session
-     (format "INSERT INTO %s.migrations (id) VALUES (?)" keyspace-name) {:values [id]}))
+    (alia/execute session (insert-migration-id-table-query keyspace-name id)))
   (remove-migration-id [_ id]
     (ensure-migration-table! keyspace-name)
-    (alia/execute
-     session
-     "DELETE FROM %s.migrations WHERE id = ?" id))
+    (apply alia/execute session (insert-migration-id-table-query)))
   (applied-migration-ids [_]
-    ()))
+    (map :id (alia/execute session (list-migration-id-query keyspace-name)))))
 
