@@ -8,4 +8,4 @@
            (tokenize-sql-statement "SELECT ...;\nDELETE ..."))))
   (testing "strip out empty lines"
     (is (= ["SELECT ...", "DELETE ..." "ALTER TABLE"]
-           (tokenize-sql-statement "SELECT ...;\nDELETE ...;ALTER TABLE;;;")))))
+           (tokenize-sql-statement "SELECT ...;\nDELETE ...;\nALTER TABLE;\n;;")))))

@@ -36,10 +36,10 @@
 (defrecord CassandraDataStore [session keyspace]
   rgp/DataStore
   (add-migration-id [_ id]
-    (ensure-migration-table! keyspace)
-    (alia/execute session (insert-migration-id-table-query session keyspace id)))
+    (ensure-migration-table! session keyspace)
+    (apply alia/execute session (insert-migration-id-table-query session keyspace id)))
   (remove-migration-id [_ id]
-    (ensure-migration-table! keyspace)
+    (ensure-migration-table! session keyspace)
     (apply alia/execute session (delete-migration-id-table-query session keyspace id)))
   (applied-migration-ids [_]
     (map :id (alia/execute session (list-migration-id-query keyspace)))))
@@ -48,11 +48,11 @@
   rgp/Migration
   (id [_] id)
   (run-down! [_ store]
-    (let [keyspace (:keyspace-name store)
+    (let [keyspace (:keyspace store)
           session (:session store)]
       (execute-statements session keyspace down)))
   (run-up! [_ store]
-    (let [keyspace (:keyspace-name store)
+    (let [keyspace (:keyspace store)
           session (:session store)]
       (execute-statements session keyspace up))))
 
@@ -60,8 +60,19 @@
   (rest  (re-matches #".*?/?([^/.]+).(up|down)\.sql" (str file))))
 
 (defn tokenize-sql-statement [sql]
-  (map s/trim (s/split sql #";")))
+  (filter (complement empty?) (map s/trim (s/split sql #";"))))
+
+(defn read-sql [file]
+  (tokenize-sql-statement (slurp file)))
 
 (defn load-migrations []
   (->> (resauce/resource-dir "migrations")
-       (map #(conj (vec (sql-file-parts %)) %))))
+       (map #(conj (vec (sql-file-parts %)) (read-sql %)))
+       (group-by first)
+       (vals)
+       (map (fn [group] (let [id (first (first group))]
+                          (->CassandraMigration id (last (first group)) (last (second group))))))))
+(defn migration-config [] {:datastore
+                           (->CassandraDataStore (alia/connect cluster) "vega")
+                           :migrations
+                           (load-migrations)})
