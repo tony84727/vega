@@ -1,0 +1,10 @@
+version: "3"
+services:
+  cassandra:
+    image: cassandra:3.11.6
+    ports:
+      - 9042:9042
+    volumes:
+      - data:/var/lib/cassandra
+volumes:
+  data:
