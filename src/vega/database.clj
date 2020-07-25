@@ -22,6 +22,12 @@
 
 (defn list-migration-id-query [keyspace] (format "SELECT id FROM %s.ragtime_migrations" keyspace))
 
+(defn use-keyspace [keyspace] (format "USE %s" keyspace))
+
+(defn execute-statements [session keyspace statements]
+  (alia/execute session (use-keyspace keyspace))
+  (doseq [statement statements] (alia/execute session statement)))
+
 (defrecord CassandraDataStore [session keyspace-name]
   rgp/DataStore
   (add-migration-id [_ id]
@@ -33,3 +39,14 @@
   (applied-migration-ids [_]
     (map :id (alia/execute session (list-migration-id-query keyspace-name)))))
 
+(defrecord CassandraMigration [id up down]
+  rgp/Migration
+  (id [_] id)
+  (run-down! [_ store]
+    (let [keyspace (:keyspace-name store)
+          session (:session store)]
+      (execute-statements session keyspace down)))
+  (run-up! [_ store]
+    (let [keyspace (:keyspace-name store)
+          session (:session store)]
+      (execute-statements session keyspace up))))
