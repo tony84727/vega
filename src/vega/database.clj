@@ -7,6 +7,7 @@
             [clojure.string :as s]))
 
 (def cluster (alia/cluster {:contact-points ["localhost"]}))
+(def keyspace-name "vega")
 
 (defn create-keyspace!
   "create a keyspace with SimpleStrategy with replication factor 1"
@@ -72,7 +73,11 @@
        (vals)
        (map (fn [group] (let [id (first (first group))]
                           (->CassandraMigration id (last (first group)) (last (second group))))))))
+(defn datasource
+  "create a cassandra ragtime datasource"
+  []
+  (->CassandraDataStore (alia/connect cluster) keyspace-name))
 (defn migration-config [] {:datastore
-                           (->CassandraDataStore (alia/connect cluster) "vega")
+                           (datasource)
                            :migrations
                            (load-migrations)})
