@@ -6,8 +6,7 @@
             [compojure.route :as cr]
             [vega.packages :as packages]
             [vega.controlpanel.debugging :as debugging]
-            [ring.util.request :refer [body-string]])
-  (:import [com.datastax.oss.driver.api.core CqlSession]))
+            [ring.util.request :refer [body-string]]))
 (defonce server (atom nil))
 
 (defn stop-server []
@@ -33,9 +32,7 @@
 (defn restart-server []
   (stop-server)
   (start-server))
-(defn new-session [] (-> (CqlSession/builder) (.build)))
-(defn get-version [] (with-open [sess (new-session)]
-                       (.execute sess "SELECT release_version FROM system.local")))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]

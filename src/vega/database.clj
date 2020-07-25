@@ -3,7 +3,8 @@
             [qbits.alia :as alia]
             [ragtime.repl :as rg]
             [ragtime.protocols :as rgp]
-            [resauce.core :as resauce]))
+            [resauce.core :as resauce]
+            [clojure.string :as s]))
 
 (def cluster (alia/cluster {:contact-points ["localhost"]}))
 
@@ -58,7 +59,9 @@
 (defn sql-file-parts [file]
   (rest  (re-matches #".*?/?([^/.]+).(up|down)\.sql" (str file))))
 
+(defn tokenize-sql-statement [sql]
+  (map s/trim (s/split sql #";")))
+
 (defn load-migrations []
   (->> (resauce/resource-dir "migrations")
-       (map #(conj (vec (sql-file-parts %)) %))
-       (group-by first)))
+       (map #(conj (vec (sql-file-parts %)) %))))
