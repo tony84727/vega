@@ -2,7 +2,8 @@
   (:require [clojure.core.reducers :as r]
             [qbits.alia :as alia]
             [ragtime.repl :as rg]
-            [ragtime.protocols :as rgp]))
+            [ragtime.protocols :as rgp]
+            [resauce.core :as resauce]))
 
 (def cluster (alia/cluster {:contact-points ["localhost"]}))
 
@@ -17,8 +18,11 @@
   (alia/execute session
                 (create-migration-table-query keyspace)))
 
-(defn insert-migration-id-table-query [keyspace id]
+(defn insert-migration-id-table-query [session keyspace id]
   (list (alia/prepare session (format "INSERT INTO %s.ragtime_migrations (id, created_at) VALUES (?, toUnixTimestamp(now()))" keyspace)) {:values [id]}))
+
+(defn delete-migration-id-table-query [session keyspace id]
+  (list (alia/prepare session (format "DELETE FROM %s.ragtime_migrations WHERE id = ?" keyspace)) {:values [id]}))
 
 (defn list-migration-id-query [keyspace] (format "SELECT id FROM %s.ragtime_migrations" keyspace))
 
@@ -28,16 +32,16 @@
   (alia/execute session (use-keyspace keyspace))
   (doseq [statement statements] (alia/execute session statement)))
 
-(defrecord CassandraDataStore [session keyspace-name]
+(defrecord CassandraDataStore [session keyspace]
   rgp/DataStore
   (add-migration-id [_ id]
-    (ensure-migration-table! keyspace-name)
-    (alia/execute session (insert-migration-id-table-query keyspace-name id)))
+    (ensure-migration-table! keyspace)
+    (alia/execute session (insert-migration-id-table-query session keyspace id)))
   (remove-migration-id [_ id]
-    (ensure-migration-table! keyspace-name)
-    (apply alia/execute session (insert-migration-id-table-query)))
+    (ensure-migration-table! keyspace)
+    (apply alia/execute session (delete-migration-id-table-query session keyspace id)))
   (applied-migration-ids [_]
-    (map :id (alia/execute session (list-migration-id-query keyspace-name)))))
+    (map :id (alia/execute session (list-migration-id-query keyspace)))))
 
 (defrecord CassandraMigration [id up down]
   rgp/Migration
@@ -50,3 +54,11 @@
     (let [keyspace (:keyspace-name store)
           session (:session store)]
       (execute-statements session keyspace up))))
+
+(defn sql-file-parts [file]
+  (rest  (re-matches #".*?/?([^/.]+).(up|down)\.sql" (str file))))
+
+(defn load-migrations []
+  (->> (resauce/resource-dir "migrations")
+       (map #(conj (vec (sql-file-parts %)) %))
+       (group-by first)))

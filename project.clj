@@ -9,7 +9,8 @@
                  [compojure "1.6.1"]
                  [com.taoensso/timbre "4.10.0"]
                  [cc.qbits/alia "4.3.3"]
-                 [ragtime "0.8.0"]]
+                 [ragtime "0.8.0"]
+                 [resauce "0.1.0"]]
   :plugins [[lein-cljfmt "0.6.8"]]
   :main ^:skip-aot vega.core
   :target-path "target/%s"
