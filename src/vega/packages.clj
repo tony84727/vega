@@ -29,7 +29,7 @@
             result (try
                      (slurp path)
                      (catch java.io.FileNotFoundException _ nil))]
-        (if result [(f/file-extension path) result](recur (rest to-try)))))))
+        (if result [(f/file-extension path) result] (recur (rest to-try)))))))
 
 (defn find-source [root id]
   (let [[ext source] (find-and-read-files (map #(str root id %) [".lua" ".fnl"]))]
