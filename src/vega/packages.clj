@@ -1,5 +1,7 @@
 (ns vega.packages
-  (:require [taoensso.timbre :as l])
+  (:require [taoensso.timbre :as l]
+            [vega.fennel :as fennel]
+            [vega.file :as f])
   (:import [java.security MessageDigest]))
 
 (defn md5 [^String s]
@@ -20,11 +22,26 @@
 
 (defn package-header [content] (str "--[[" (md5 content) "]]--\n" content))
 
-(defn package-content
+(defn find-and-read-files [paths]
+  (loop [to-try paths]
+    (when-not (empty? to-try)
+      (let [path (first to-try)
+            result (try
+                     (slurp path)
+                     (catch java.io.FileNotFoundException _ nil))]
+        (if result [(f/file-extension path) result](recur (rest to-try)))))))
+
+(defn find-source [root id]
+  (let [[ext source] (find-and-read-files (map #(str root id %) [".lua" ".fnl"]))]
+    (if (= "fnl" ext) (fennel/transpile-file source) source)))
+
+(defn package-source [root id])
+
+(defn package-content-handler
   [root id]
   {:status 200 :body (package-header (package-file root id))})
 
 (defn package-repository [root]
   (fn [req] (cond
               (= (-> req :query-string) "md5") (id-handler (partial package-info root))
-              (constantly true) (id-handler (partial package-content root)))))
+              (constantly true) (id-handler (partial package-content-handler root)))))
