@@ -14,32 +14,30 @@
   [handler]
   (fn [req] (handler (-> req :params :id))))
 
-(defn package-file [root id] (slurp (str root id ".lua")))
-
-(defn package-info
-  "serve package info (e.g) md5 hash, last modified. print it out in body beause it's not convenient to read headers from openComputers"
-  [root id] {:status 200 :body (md5 (package-file root id))})
-
 (defn package-header [content] (str "--[[" (md5 content) "]]--\n" content))
 
-(defn find-and-read-files [paths]
+(defn find-paths [paths]
   (loop [to-try paths]
     (when-not (empty? to-try)
       (let [path (first to-try)
-            result (try
-                     (slurp path)
-                     (catch java.io.FileNotFoundException _ nil))]
-        (if result [(f/file-extension path) result] (recur (rest to-try)))))))
+            exists (f/exists? path)]
+        (if exists path (recur (rest to-try)))))))
 
-(defn find-source [root id]
-  (let [[ext source] (find-and-read-files (map #(str root id %) [".lua" ".fnl"]))]
-    (if (= "fnl" ext) (fennel/transpile-file source) source)))
+(defn get-source [root id]
+  (let [path (find-paths (map #(str root id %) [".lua" ".fnl"]))
+        ext (f/file-extension path)]
+    (when path
+      (if (= "fnl" ext) (fennel/transpile-file path) (slurp path)))))
 
-(defn package-source [root id])
+(defn package-info
+  "serve package info (e.g) md5 hash, last modified. print it out in body beause it's not convenient to read headers from openComputers"
+  [root id] (let [s (get-source root id)] {:status (if s 200 404) :body (when s (md5 s))}))
 
 (defn package-content-handler
   [root id]
-  {:status 200 :body (package-header (package-file root id))})
+  (let [source (get-source root id)]
+    {:status (if source 200 404)
+     :body (when source (package-header source))}))
 
 (defn package-repository [root]
   (fn [req] (cond

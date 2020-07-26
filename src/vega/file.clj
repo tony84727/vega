@@ -1,6 +1,9 @@
-(ns vega.file)
+(ns vega.file
+  (:require [clojure.java.io :as io]))
 
 (defn file-extension
   "return file extension without period"
   [path]
-  (second (re-find #"\.([^\\]+)$" path)))
+  (when path (second (re-find #"\.([^\\]+)$" path))))
+
+(defn exists? [path] (.exists (io/file path)))
