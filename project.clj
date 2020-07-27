@@ -11,7 +11,8 @@
                  [cc.qbits/alia "4.3.3"]
                  [ragtime "0.8.0"]
                  [resauce "0.1.0"]
-                 [clj-commons/clj-yaml "0.7.1"]]
+                 [clj-commons/clj-yaml "0.7.1"]
+                 [org.suskalo/discljord "1.1.1"]]
   :plugins [[lein-cljfmt "0.6.8"]]
   :main ^:skip-aot vega.core
   :target-path "target/%s"
