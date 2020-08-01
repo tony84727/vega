@@ -9,4 +9,9 @@ module.exports = {
     "plugin:react-hooks/recommended",
     "prettier/@typescript-eslint",
   ],
+  settings: {
+    react: {
+      version: "detect",
+    },
+  },
 };
