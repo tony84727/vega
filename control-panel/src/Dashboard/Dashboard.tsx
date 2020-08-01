@@ -1,3 +1,4 @@
+import React from "react";
 import { IDashboardProps } from "../IDashboardProps";
 import { Grid } from "@material-ui/core";
 import SiteMap from "../SiteMap/SiteMap";
@@ -21,7 +22,7 @@ export function Dashboard({
   generatorSwitches,
   draconicReactors,
   messageLines,
-}: IDashboardProps) {
+}: IDashboardProps): React.ReactElement {
   const styles = useStyles();
   return (
     <Grid container className={styles.container}>

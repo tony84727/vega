@@ -1,3 +1,4 @@
+import React from "react";
 import { IBarProps } from "./IBarProps";
 import { LinearProgress } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
@@ -12,8 +13,8 @@ const useStyles = makeStyles({
   },
 });
 
-export default function Bar(props: IBarProps) {
-  const { highContrast, barColor, ...rest } = props;
+export default function Bar(props: IBarProps): React.ReactElement {
+  const { ...rest } = props;
   const styles = useStyles(props);
   return <LinearProgress classes={styles} {...rest} />;
 }

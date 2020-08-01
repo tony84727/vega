@@ -1,6 +1,6 @@
+import React, { useCallback } from "react";
 import { IMessageDisplay } from "../IMessageDisplay";
 import { FixedSizeList } from "react-window";
-import { useCallback } from "react";
 import { IMessageRowProps } from "./IMessageRowProps";
 import { ListItem, ListItemText } from "@material-ui/core";
 import { makeStyles } from "@material-ui/styles";
@@ -17,7 +17,9 @@ const useListItemTextStyles = makeStyles({
   },
 });
 
-export default function MessageDisplay({ lines }: IMessageDisplay) {
+export default function MessageDisplay({
+  lines,
+}: IMessageDisplay): React.ReactElement {
   const listItemStyles = useListItemStyles();
   const listItemTextStyles = useListItemTextStyles();
   const MessageRow = useCallback(
@@ -26,7 +28,7 @@ export default function MessageDisplay({ lines }: IMessageDisplay) {
         <ListItemText classes={listItemTextStyles} primary={lines[index]} />
       </ListItem>
     ),
-    [lines, listItemStyles]
+    [lines, listItemStyles, listItemTextStyles]
   );
   return (
     <FixedSizeList

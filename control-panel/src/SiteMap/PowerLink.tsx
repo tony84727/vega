@@ -1,8 +1,13 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { IPowerLinkProps } from "./IPowerLinkProps";
 import Text from "./Text";
 
-export default function PowerLink({ from, to, color, flow }: IPowerLinkProps) {
+export default function PowerLink({
+  from,
+  to,
+  color,
+  flow,
+}: IPowerLinkProps): React.ReactElement {
   const middle = useMemo(() => [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2], [
     from,
     to,

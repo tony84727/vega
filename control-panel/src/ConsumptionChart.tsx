@@ -1,3 +1,4 @@
+import React from "react";
 import { AreaSeries, XAxis, XYPlot, YAxis } from "react-vis";
 
 interface SiteData {
@@ -7,7 +8,9 @@ interface SiteData {
 interface IConsumptionChart {
   siteData: SiteData[];
 }
-export default function ConsumptionChart({ siteData }: IConsumptionChart) {
+export default function ConsumptionChart({
+  siteData,
+}: IConsumptionChart): React.ReactElement {
   return (
     <XYPlot height={300} width={300}>
       <XAxis />

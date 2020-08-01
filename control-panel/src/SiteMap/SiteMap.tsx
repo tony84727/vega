@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import PowerLink from "./PowerLink";
 import Site from "./Site";
 import BackgroundRemovalFilterDef from "./BackgroundRemovalFilterDef";
@@ -8,7 +8,7 @@ export default function SiteMap({
   data,
   width = 600,
   height = 600,
-}: ISiteMapProps) {
+}: ISiteMapProps): React.ReactElement {
   const { sites, powerLinks } = data;
   const siteColor = "#fff749";
   const links = useMemo(
