@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import { EMPTY, fromEvent, merge, Observable } from "rxjs";
-import { map, takeUntil, tap } from "rxjs/operators";
+import { map, takeUntil } from "rxjs/operators";
 import { WebSocketMessage } from "rxjs/internal/observable/dom/WebSocketSubject";
+import { IUseWebsocket } from "./IUseWebsocket";
 
-export default function useWebsocket(websocketHost: string) {
+export default function useWebsocket(websocketHost: string): IUseWebsocket {
   const [socket] = useState(() =>
     process.browser ? new WebSocket(websocketHost) : undefined
   );

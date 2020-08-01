@@ -1,3 +1,4 @@
+import React from "react";
 import { IDraconicReactorStatusProps } from "../IDraconicReactorStatusProps";
 import { Grid } from "@material-ui/core";
 import ValueDisplay from "./ValueDisplay";
@@ -7,7 +8,7 @@ export default function DraconicReactorStatus({
   temperature,
   efficiency,
   energy,
-}: IDraconicReactorStatusProps) {
+}: IDraconicReactorStatusProps): React.ReactElement {
   return (
     <Grid container direction={"column"}>
       <Grid item>

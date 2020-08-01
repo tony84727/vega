@@ -7,7 +7,9 @@ function slidingWindow<I>(count: number): OperatorFunction<I, I[]> {
     source$.pipe(scan((acc, c) => [c, ...acc.slice(0, count)], []));
 }
 
-export default function useDebuggingConsole(lines$: Observable<string>) {
+export default function useDebuggingConsole(
+  lines$: Observable<string>
+): string[] {
   const [lines, setLines] = useState<string[]>([]);
   useEffect(() => {
     lines$.pipe(slidingWindow(20)).subscribe(setLines);

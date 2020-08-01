@@ -1,6 +1,6 @@
-import { DiscreteColorLegend, Hint, Sunburst, SunburstPoint } from "react-vis";
+import React, { useMemo } from "react";
+import { DiscreteColorLegend, Sunburst, SunburstPoint } from "react-vis";
 import { Grid } from "@material-ui/core";
-import { useMemo } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 
 const colors = {
@@ -40,7 +40,7 @@ const useStyles = makeStyles({
 });
 export default function PowerSourceChart({
   powerSourceData,
-}: IPowerSourceChartProps) {
+}: IPowerSourceChartProps): React.ReactElement {
   const styles = useStyles();
   const decorated = useMemo(() => decorateData(powerSourceData), [
     powerSourceData,
@@ -49,7 +49,6 @@ export default function PowerSourceChart({
     () => Object.keys(colors).map((title) => ({ title, color: colors[title] })),
     []
   );
-  const sum = powerSourceData.children.reduce((acc, c) => acc + c.size, 0);
   return (
     <Grid container>
       <Sunburst

@@ -1,6 +1,7 @@
+import React from "react";
 import { IPanelProps } from "./IPanelProps";
 import Card from "@material-ui/core/Card";
-import { Grid, Typography } from "@material-ui/core";
+import { Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles({
@@ -9,7 +10,10 @@ const useStyles = makeStyles({
   },
 });
 
-export default function Panel({ title, children }: IPanelProps) {
+export default function Panel({
+  title,
+  children,
+}: IPanelProps): React.ReactElement {
   const styles = useStyles();
   return (
     <Card className={styles.content}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Observable, of } from "rxjs";
+import { of } from "rxjs";
 import { SunburstPoint } from "react-vis";
 import { Dashboard } from "./Dashboard/Dashboard";
 import { powerLinks, sites } from "./siteMapMockData";
@@ -9,7 +9,7 @@ import useDebuggingConsole from "./useDebuggingConsole";
 import useWebsocket from "./useWebsocket";
 import { map } from "rxjs/operators";
 
-export default function MockDashboard() {
+export default function MockDashboard(): React.ReactElement {
   const [powerSourceData, setPowerSourceData] = useState<SunburstPoint>({
     title: "root",
     size: 0,
