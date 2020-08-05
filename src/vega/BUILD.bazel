@@ -1,0 +1,7 @@
+load("@rules_clojure//:rules.bzl", "clojure_library")
+
+clojure_library(
+    name = "core",
+    srcs = glob(["*.clj"]),
+    visibility = ["//visibility:public"],
+)
