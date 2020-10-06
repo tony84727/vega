@@ -21,7 +21,7 @@
 
 (defroutes all-routes
   (GET "/" [] hello)
-  (GET "/packages/:id" [] (packages/package-repository "resources/packages/"))
+  (GET "/packages/*" [] (packages/service "resources/packages/"))
   (GET "/websocket" [] (partial debugging/handler debugging-pub))
   (POST "/log" [] (partial debugging/log-handler debugging-message-ch))
   (cr/not-found {:status 404 :body "vega can't understand this :<"}))
