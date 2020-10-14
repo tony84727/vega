@@ -6,5 +6,5 @@
   "transpile fennel source file to lua"
   [path]
   (let [result (shell/sh "fennel" "--compile" path)]
-    (when-not (empty? (:err result)) (throw (Exception. "compile error")))
+    (when-not (empty? (:err result)) (throw (ex-info "compile error" result)))
     (:out result)))
