@@ -4,4 +4,4 @@
 
 (deftest test-serialize
   (testing "serialize an array"
-    (is (= "{1,2,3,4}" (serialize '(1 2 3 4))))))
+    (is (= "{1, 2, 3, 4}" (serialize '(1 2 3 4))))))
