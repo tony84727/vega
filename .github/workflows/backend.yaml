@@ -12,9 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: lein deps
       - name: Lint format
-        run: lein cljfmt check
+        run: clj -A:fmt check
       - name: Run tests
-        run: lein test
+        run: clojure -A:test
