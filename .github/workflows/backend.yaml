@@ -13,6 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Lint format
-        run: clj -A:fmt check
+        run: clojure -A:fmt check
       - name: Run tests
         run: clojure -A:test
