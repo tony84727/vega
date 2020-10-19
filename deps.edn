@@ -1,0 +1,9 @@
+{:deps {org.clojure/core.async {:mvn/version "1.2.603"}
+        http-kit {:mvn/version "2.3.0"}
+        compojure {:mvn/version "1.6.1"}
+        com.taoensso/timbre {:mvn/version "4.10.0"}
+        cc.qbits/alia {:mvn/version "4.3.3"}
+        ragtime {:mvn/version "0.8.0"}
+        resauce {:mvn/version "0.1.0"}}
+ :aliases {:fmt {:extra-deps {cljfmt {:mvn/version "0.7.0"}}
+                 :main-opts ["-m" "cljfmt.main" "fix"]}}}
