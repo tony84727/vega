@@ -1,18 +1,15 @@
-(local internet (require "internet"))
-(local filesystem (require "filesystem"))
-(local serialization (require "serialization"))
 (local loader-package-id "loader")
 
 (fn load-vega-config
   []
-  (local (file err) (filesystem.open "/home/vega.host"))
+  (local (file err) (io.open "/home/vega.host"))
   (if (= nil err)
       (let [host (file:read 1024)]
         (file:close)
         host)
       ""))
 
-(var vega "http://localhost:8080")
+(var vega "https://vega.catcatlog.com")
 (local config-host (load-vega-config))
 (if (> (string.len config-host) 0)
     (set vega config-host))
@@ -27,17 +24,8 @@
   (package-url-with-query-string repository id ""))
 (fn ensure-directory!
   [dir]
-  (filesystem.makeDirectory dir))
-(fn http-get [url]
-  (let [handle (internet.request url)]
-    (var done false)
-    (var response "")
-    (while (not done)
-      (local buffer (handle.read))
-      (if (= nil buffer)
-          (set done true)
-          (set response (.. response buffer))))
-    response))
+  (fs.makeDir dir))
+
 (fn spit
   [path content]
   (local (file err) (io.open path "w"))
@@ -60,16 +48,20 @@
         (file:close)
         (values buffer nil))
       (values nil err)))
+(fn http-get
+  [url]
+  (let [res (http.get url)]
+    (res.readAll)))
 (fn http-download-to
   [url path]
-  (filesystem.makeDirectory (filesystem.path path))
+  (fs.makeDir (fs.getDir path))
   (let [result (spit path (http-get url))]
     (when (~= nil result)
       (print err))))
 (fn get-manifest
   [pkg]
   (let [manifest (http-get (package-url-with-query-string package-repository pkg "manifest"))]
-    (serialization.unserialize manifest)))
+    (textutils.unserialize manifest)))
 (fn local-manifest-path
   [pkg]
   (.. "/home/.loader/manifests/" pkg ".manifest"))
@@ -78,7 +70,7 @@
   (let [manifest-path (local-manifest-path pkg)
         (manifest err) (slurp manifest-path)]
     (when (= err nil)
-        (serialization.unserialize manifest))))
+        (textutils.unserialize manifest))))
 (fn ensure-loader-dir!
   []
   (ensure-directory! "/home/.loader"))
@@ -125,18 +117,18 @@
     (let [url (.. vega "/" entry.url)
           install-path entry.installPath]
       (print (.. url " => " install-path))
-      (ensure-directory! (filesystem.path (filesystem.concat "/home" install-path)))
+      (ensure-directory! (fs.getDir (fs.combine "/home" install-path)))
       (http-download-to url install-path))))
 (fn delete-files!
   [entries]
   (each [_ entry (ipairs entries)]
     (print (.. "delete stalled file: " entry.installPath))
-    (os.remove (filesystem.concat "/home" entry.installPath))))
+    (os.remove (fs.combine "/home" entry.installPath))))
 (fn update-local-manifest!
   [pkg manifest]
   (local manifest-path (local-manifest-path pkg))
-  (ensure-directory! (filesystem.path manifest-path))
-  (let [result (spit manifest-path (serialization.serialize manifest))]
+  (ensure-directory! (fs.getDir manifest-path))
+  (let [result (spit manifest-path (textutils.serialize manifest))]
     (when result
       (print "failed to update manifest")
       (print result))))
@@ -177,4 +169,4 @@
 (match (. args 1)
   "ensure" (ensure-package (. args 2))
   "uninstall" (uninstall-package (. args 2))
-  (print "unknown command"))
+  (print "loader ready"))
