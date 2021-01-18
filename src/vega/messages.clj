@@ -5,7 +5,7 @@
 
 (defn new-handler
   [message-ch]
-  (let [pub (async/pub message-ch (constantly nil))]
+  (let [pub (async/pub message-ch (constantly nil) (constantly (async/sliding-buffer 10)))]
     (fn [req]
       (let [sub (atom nil)]
         (as-channel req
@@ -13,15 +13,15 @@
                                          (async/sub pub nil sub-ch)
                                          (async/go-loop []
                                            (when-let [message (async/<! sub-ch)]
+                                             (println "send")
                                              (send! ch message)
                                              (recur)))
                                          (reset! sub sub-ch)))
-                     :on-close (fn [ch status] (async/unsub pub nil @sub))})))))
+                     :on-close (fn [ch status] (async/unsub pub nil @sub) (async/close! @sub))})))))
 
 (defn post-message-handler
   [output-ch request]
   (let [message (body-string request)]
-    (async/go
-      (async/>! output-ch
-                message))
+    (async/>!! output-ch
+               message)
     {:status 200 :body "OK"}))
