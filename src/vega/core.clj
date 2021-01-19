@@ -19,15 +19,18 @@
    :body "Welcome to vega"})
 (def debugging-message-ch (async/chan))
 (def debugging-pub (debugging/new-pub debugging-message-ch))
-(defonce message-ch (atom (async/chan)))
-(swap! message-ch (fn [ch] (when ch (async/close! ch)) (async/chan)))
+(defonce messages-broker (atom nil))
+(swap! messages-broker (fn [[message-ch pub]]
+                         (when message-ch (async/close! message-ch))
+                         (let [ch (async/chan)]
+                           [ch (messages/new-pub ch)])))
 
 (defroutes all-routes
   (GET "/" [] hello)
   (GET "/packages/*" [] (packages/service "resources/packages/"))
   (GET "/websocket" [] (partial debugging/handler debugging-pub))
-  (GET "/api/messages" [] (messages/new-handler @message-ch))
-  (POST "/api/push_message" [] (partial messages/post-message-handler @message-ch))
+  (GET "/api/messages" [] (partial messages/websocket-handler (second @messages-broker)))
+  (POST "/api/push_message" [] (partial messages/post-message-handler (first @messages-broker)))
   (POST "/log" [] (partial debugging/log-handler debugging-message-ch))
   (cr/not-found {:status 404 :body "vega can't understand this :<"}))
 
