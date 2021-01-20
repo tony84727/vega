@@ -1,17 +1,20 @@
 (local default-websocket "wss://vega.catcatlog.com/api/messages")
-(global args [...])
+(local args [...])
 (fn get-websocket-url!
   []
   (let [url (. args 1)]
     (if (~= nil url)
         url
         default-websocket)))
-(let [url (get-websocket-url!)]
-  (print (.. "connecting to " url))
-  (let [(ws err) (http.websocket url)]
-    (if (~= err nil)
-        (print err)
-        (while true
-          (print (ws.receive))))))
+(http.websocketAsync (get-websocket-url!))
+
+(while true
+  (match (os.pullEvent)
+    ("websocket_success" url websocket) (do (print (.. "connected to " url))
+                                     (global ws websocket))
+    ("websocket_message" _ message) (print message)
+    ("websocket_closed" url) (do
+                               (print (.. "websocket closed: " url))
+                               (global ws (http.websocketAsync (get-websocket-url!))))))
 
 
