@@ -19,10 +19,11 @@
    :body "Welcome to vega"})
 (def debugging-message-ch (async/chan))
 (def debugging-pub (debugging/new-pub debugging-message-ch))
+(def ^:private messaging-buffer-size 100)
 (defonce messages-broker (atom nil))
 (swap! messages-broker (fn [[message-ch pub]]
                          (when message-ch (async/close! message-ch))
-                         (let [ch (async/chan)]
+                         (let [ch (async/chan messaging-buffer-size)]
                            [ch (messages/new-pub ch)])))
 
 (defroutes all-routes
