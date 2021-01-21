@@ -7,6 +7,7 @@
             [vega.packages :as packages]
             [vega.controlpanel.debugging :as debugging]
             [vega.messages :as messages]
+            [vega.discord :as discord]
             [ring.util.request :refer [body-string]]))
 (defonce server (atom nil))
 
@@ -46,5 +47,7 @@
   "I don't do a whole lot ... yet."
   [& args]
   (start-server)
-  (println "vega http server started"))
+  (println "vega http server started")
+  (discord/start-bot! (first @messages-broker))
+  (println "discord bot online"))
 
