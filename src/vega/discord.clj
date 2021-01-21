@@ -8,10 +8,20 @@
   []
   (read-string (slurp default-config-path)))
 
+(defn command-handlers
+  [messaging-ch commands]
+  (map (fn [[command message]]
+         (fn [args]
+           (async/go (async/>! messaging-ch message))))
+       commands))
 
-(comment (let [event-ch (async/chan 100)
-               connection-ch (c/connect-bot! token event-ch)
-               message-ch (m/start-connection! token)]
-           (try
-             (loop []
-               (let [[event-type event-data] (async/<)])))))
+
+(let [event-ch (async/chan 100)
+      connection-ch (c/connect-bot! token event-ch)
+      message-ch (m/start-connection! token)]
+  (try
+    (loop []
+      (let [[event-type event-data] (async/<! event-ch)]))
+    (finally
+      (m/stop-connection! message-ch)
+      (async/close! event-ch))))
