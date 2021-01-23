@@ -1,61 +1,53 @@
 (ns vega.database
-  (:require [clojure.core.reducers :as r]
-            [qbits.alia :as alia]
-            [ragtime.repl :as rg]
-            [ragtime.protocols :as rgp]
-            [resauce.core :as resauce]
-            [clojure.string :as s]))
+  (:require             [qbits.alia :as alia]
+                        [ragtime.repl :as rg]
+                        [ragtime.protocols :as rgp]
+                        [resauce.core :as resauce]
+                        [clojure.string :as s]))
 
-(def cluster (alia/cluster {:contact-points ["localhost"]}))
-(def keyspace-name "vega")
+(def ^:private keyspace-name "vega")
+
+(def get-session!
+  (memoize (fn [keyspace-name] (let [config {:contact-points ["localhost"]}]
+                                 (alia/session (if keyspace-name (assoc config :session-keyspace keyspace-name)
+                                                   config))))))
 
 (defn create-keyspace!
   "create a keyspace with SimpleStrategy with replication factor 1"
   [session keyspace] (alia/execute
                       session
                       (format "CREATE KEYSPACE %s WITH replication = {'class':'SimpleStrategy', 'replication_factor': 1}" keyspace)))
-(defn create-migration-table-query [keyspace]
-  (format "CREATE TABLE IF NOT EXISTS %s.ragtime_migrations (id varchar, created_at timestamp, PRIMARY KEY (id))" keyspace))
-(defn ensure-migration-table! [session keyspace]
+(defn create-migration-table-query [])
+(defn- ensure-migration-table! [session]
   (alia/execute session
-                (create-migration-table-query keyspace)))
-
-(defn insert-migration-id-table-query [session keyspace id]
-  (list (alia/prepare session (format "INSERT INTO %s.ragtime_migrations (id, created_at) VALUES (?, toUnixTimestamp(now()))" keyspace)) {:values [id]}))
-
-(defn delete-migration-id-table-query [session keyspace id]
-  (list (alia/prepare session (format "DELETE FROM %s.ragtime_migrations WHERE id = ?" keyspace)) {:values [id]}))
-
-(defn list-migration-id-query [keyspace] (format "SELECT id FROM %s.ragtime_migrations" keyspace))
+                "CREATE TABLE IF NOT EXISTS ragtime_migrations (id varchar, created_at timestamp, PRIMARY KEY (id))"))
 
 (defn use-keyspace [keyspace] (format "USE %s" keyspace))
 
-(defn execute-statements [session keyspace statements]
-  (alia/execute session (use-keyspace keyspace))
+(defn execute-statements [session statements]
   (doseq [statement statements] (alia/execute session statement)))
 
-(defrecord CassandraDataStore [session keyspace]
+(defrecord CassandraDataStore [session]
   rgp/DataStore
   (add-migration-id [_ id]
-    (ensure-migration-table! session keyspace)
-    (apply alia/execute session (insert-migration-id-table-query session keyspace id)))
+    (ensure-migration-table! session)
+    (alia/execute session "INSERT INTO ragtime_migrations (id, created_at) VALUES (?, toUnixTimestamp(now()))" {:values [id]}))
   (remove-migration-id [_ id]
-    (ensure-migration-table! session keyspace)
-    (apply alia/execute session (delete-migration-id-table-query session keyspace id)))
+    (ensure-migration-table! session)
+    (alia/execute session "DELETE FROM ragtime_migrations WHERE id = ?" {:values [id]}))
   (applied-migration-ids [_]
-    (map :id (alia/execute session (list-migration-id-query keyspace)))))
+    (ensure-migration-table! session)
+    (map :id (alia/execute session "SELECT id FROM ragtime_migrations"))))
 
 (defrecord CassandraMigration [id up down]
   rgp/Migration
   (id [_] id)
   (run-down! [_ store]
-    (let [keyspace (:keyspace store)
-          session (:session store)]
-      (execute-statements session keyspace down)))
+    (let [session (:session store)]
+      (execute-statements session down)))
   (run-up! [_ store]
-    (let [keyspace (:keyspace store)
-          session (:session store)]
-      (execute-statements session keyspace up))))
+    (let [session (:session store)]
+      (execute-statements session up))))
 
 (defn sql-file-parts [file]
   (rest  (re-matches #".*?/?([^/.]+).(up|down)\.sql" (str file))))
@@ -70,14 +62,15 @@
   (->> (resauce/resource-dir "migrations")
        (map #(conj (vec (sql-file-parts %)) (read-sql %)))
        (group-by first)
-       (vals)
-       (map (fn [group] (let [id (first (first group))]
-                          (->CassandraMigration id (last (first group)) (last (second group))))))))
-(defn datasource
+       (map (fn [[id files]]
+              (let [grouped (into {} (map (fn [entry] (vec (drop 1 entry)))) files)]
+                (CassandraMigration. id (get grouped "up") (get grouped "down")))))))
+
+(defn- data-store
   "create a cassandra ragtime datasource"
   []
-  (->CassandraDataStore (alia/connect cluster) keyspace-name))
+  (->CassandraDataStore (get-session! keyspace-name)))
 (defn migration-config [] {:datastore
-                           (datasource)
+                           (data-store)
                            :migrations
                            (load-migrations)})
