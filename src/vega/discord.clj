@@ -1,7 +1,9 @@
 (ns vega.discord
-  (:require [clojure.core.async :as async]
+  (:require [vega.messages :as messages]
+            [clojure.core.async :as async]
             [discljord.connections :as c]
-            [discljord.messaging :as m]))
+            [discljord.messaging :as m]
+            [qbits.alia :as alia]))
 (def ^:private default-config-path "discord.edn")
 
 (defonce bot (atom nil))
@@ -22,19 +24,23 @@
                 commands)))
 (defn- parse-command
   [message]
-  (second (re-matches #"!(\S+)" message)))
+  (drop 1 (re-matches #"!(\S+)\s+(.*)" message)))
+
+(defn- resolve-hanlder
+  [session]
+  (alia/execute session ("SELECT messages FROM LIMIT 1")))
 
 (defn- handle-message-commands
-  [handlers event-data]
+  [resolve-handler event-data]
   (let [{channel-id :channel-id content :content} event-data
         command (parse-command content)
-        handler (when command (get handlers command))]
+        handler (when command (resolve-handler command))]
     (when handler
       (handler))))
+
 (defn- create-message-command-handler
-  [commands messaging-ch]
-  (let [handlers (command-handlers commands messaging-ch)]
-    (partial handle-message-commands handlers)))
+  [resolve-handler]
+  (partial handle-message-commands resolve-handler))
 
 (defn connect-bot!
   [token commands messaging-ch]
@@ -42,7 +48,7 @@
         connection-ch (c/connect-bot! token event-ch :intents [:guilds :guild-messages])
         message-ch (m/start-connection! token)
         stop (fn [] (c/disconnect-bot! connection-ch))
-        message-handler (create-message-command-handler commands messaging-ch)]
+        message-handler (create-message-command-handler (partial messages/resolve-command-message messaging-ch))]
     (async/go
       (try
         (loop []

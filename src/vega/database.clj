@@ -12,6 +12,10 @@
                                  (alia/session (if keyspace-name (assoc config :session-keyspace keyspace-name)
                                                    config))))))
 
+(defn get-default-session!
+  []
+  (get-session! keyspace-name))
+
 (defn create-keyspace!
   "create a keyspace with SimpleStrategy with replication factor 1"
   [session keyspace] (alia/execute
@@ -74,3 +78,5 @@
                            (data-store)
                            :migrations
                            (load-migrations)})
+
+(def execute! (partial alia/execute (get-session! keyspace-name)))
