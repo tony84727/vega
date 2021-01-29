@@ -22,5 +22,7 @@
 
 (while true 
   (match (os.pullEvent)
-    ("char" a) (s.playNote "flute" 1 (key-to-note a))
+    ("char" a) (let [note (key-to-note a)]
+                 (s.playNote "flute" 1 note)
+                 (print note))
   ))
