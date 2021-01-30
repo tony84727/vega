@@ -1,0 +1,28 @@
+(local open-side "top")
+(local close-side "bottom")
+(local protocol "window-controller")
+
+(each [_ s (ipairs (rs.getSides))]
+  (when (= (peripheral.getType s) "modem")
+      (rednet.open s)))
+
+(local controller-host (rednet.lookup "window-controller" "window-controller"))
+(global heartbeat-timer (os.startTimer 1))
+
+(fn report []
+  (when (rs.getInput open-side)
+    (rednet.send controller-host "open" protocol))
+  (when (rs.getInput close-side)
+    (rednet.send controller-host "close" protocol)))
+
+(fn heartbeat []
+  (rednet.send controller-host "heartbeat" protocol))
+(if controller-host 
+    (while true
+      (match (os.pullEvent)
+        ("timer" timer-id)
+        (when (= timer-id heartbeat-timer)
+          (heartbeat)
+          (global heartbeat-timer (os.startTimer 1)))
+        ("redstone") (report)))
+    (print "cannot find the controller"))
