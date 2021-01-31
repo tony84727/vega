@@ -3,11 +3,15 @@
 (local detector-side "top")
 (local alarm-side "front")
 (local sensor-heartbeat-timeout 1.2)
+(local rednet-host-interval 4)
+(local protocol "window-controller")
+(local host "window-controller")
 
-(global desired-state (rs.getInput detector-side))
+(global desired-state (not (rs.getInput detector-side)))
 (global current-state desired-state)
 (global system-ready false)
 (global system-not-ready-timer nil)
+(global rednet-host-timer (os.startTimer rednet-host-interval))
 
 (fn clutch-output
   [system-ready desired-state current-state]
@@ -22,7 +26,14 @@
 (each [_ s (ipairs (rs.getSides))]
   (when (= (peripheral.getType s) "modem")
     (rednet.open s)))
-(rednet.host "window-controller" "window-controller")
+
+(rednet.host protocol host)
+
+(fn boolean-str
+  [b]
+  (if b
+      "true"
+      "false"))
 
 (while true
   (match (os.pullEvent)
@@ -36,11 +47,18 @@
         "close" (global current-state false)
         "open" (global current-state true)))
     ("timer" timer-id)
-    (when (= timer-id system-not-ready-timer)
-      (global system-ready false)
-      (print "system-not-ready:sensor heartbeat timeout")))
+    (match timer-id
+      system-not-ready-timer (do
+                               (global system-ready false)
+                               (print "system-not-ready:sensor heartbeat timeout"))
+      rednet-host-timer (do
+                          (rednet.host protocol host)
+                          (global rednet-host-timer (os.startTimer rednet-host-interval)))))
   (global desired-state (not (rs.getInput detector-side)))
   (rs.setOutput clutch-side (clutch-output system-ready desired-state current-state))
   (rs.setOutput direction-side (shaft-output desired-state current-state))
   (rs.setOutput alarm-side (alarm-output desired-state current-state))
+  (print (.. "d: " (boolean-str desired-state)))
+  (print (.. "c: " (boolean-str current-state)))
+  (print (.. "sr: " (boolean-str system-ready)))
 )

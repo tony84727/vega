@@ -6,7 +6,14 @@
   (when (= (peripheral.getType s) "modem")
       (rednet.open s)))
 
-(local controller-host (rednet.lookup "window-controller" "window-controller"))
+(global controller-host (rednet.lookup "window-controller" "window-controller"))
+(fn log [message]
+  (.. "[" (os.clock) "] " message))
+(while (= nil controller-host)
+  (log "unable to loolup the window controller, will retry after 5 seconds")
+  (sleep 5)
+  (global controller-host (rednet.lookup "window-controller" "window-controller")))
+
 (global heartbeat-timer (os.startTimer 1))
 
 (fn report []
@@ -17,6 +24,7 @@
 
 (fn heartbeat []
   (rednet.send controller-host "heartbeat" protocol))
+
 (if controller-host 
     (while true
       (match (os.pullEvent)
@@ -25,4 +33,4 @@
           (heartbeat)
           (global heartbeat-timer (os.startTimer 1)))
         ("redstone") (report)))
-    (print "cannot find the controller"))
+    (log "cannot find the controller"))
