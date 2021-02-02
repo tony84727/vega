@@ -4,8 +4,8 @@
 (local alarm-side "front")
 (local sensor-heartbeat-timeout 1.2)
 (local rednet-host-interval 4)
-(local protocol "window-controller")
-(local host "window-controller")
+(local c-protocol "window-controller")
+(local c-host "window-controller")
 
 (global desired-state (not (rs.getInput detector-side)))
 (global current-state desired-state)
@@ -27,7 +27,7 @@
   (when (= (peripheral.getType s) "modem")
     (rednet.open s)))
 
-(rednet.host protocol host)
+(rednet.host c-protocol c-host)
 
 (fn boolean-str
   [b]
@@ -38,37 +38,39 @@
 (local required-chunk [11 12])
 (local chunk-timeout 3)
 (fn some-is-nil
-  [t i]
-  (if (= nil (. t i))
-      true
-      (> (+ 1 i) (length t))
-      false
-      (some-is-nil t (+ 1 i))))
+  [t]
+  (each [_ v (pairs t)]
+        (if (= v nil)
+            (lua "return true")))
+  false)
 
 (fn new-chunk-ready-detector
   [chunks]
-  (var chunk-timers [])
+  (var chunk-timers {})
   (each [_ c (ipairs chunks)]
-    (tset chunks c (os.startTimer chunk-timeout)))
+    (tset chunk-timers c (os.startTimer chunk-timeout)))
   (fn [...]
-    (match [...]
+    (match ...
       ("rednet_message" distance message protocol)
-      (when (= protocol "chunk-heartbeat")
-        (os.cancelTimer (. chunk-timers message))
-        (tset message (os.startTimer chunk-timeout)))
+      (do
+        (when (= protocol "chunk-heartbeat")
+          (let [origin-timer (. chunk-timers message)]
+            (when origin-timer
+              (os.cancelTimer origin-timer)))
+          (tset chunk-timers message (os.startTimer chunk-timeout))))
       ("timer" timer-id)
-      (each [i c (ipairs chunk-timers)]
-        (when (= c timer-id)
-          (tset chunk-timers i nil))))
-    (some-is-nil chunk-timers)))
-(global chunk-ready (new-chunk-ready-detector))
+      (each [chunk-id chunk-timer (pairs chunk-timers)]
+        (when (= chunk-timer timer-id)
+          (print (.. "chunk " chunk-id " timed out"))
+          (tset chunk-timers chunk-id nil))))
+    (not (some-is-nil chunk-timers))))
+(global chunk-ready (new-chunk-ready-detector [11 12]))
 
 (while true
   (let [event (table.pack (os.pullEvent))]
-    (chunk-ready (table.unpack event))
     (match (table.unpack event)
       ("rednet_message" distance message protocol)
-      (when (= protocol "window-controller")
+      (when (= protocol c-protocol)
         (when system-not-ready-timer 
           (os.cancelTimer system-not-ready-timer))
         (global system-not-ready-timer (os.startTimer sensor-heartbeat-timeout))
@@ -82,13 +84,15 @@
                                  (global system-ready false)
                                  (print "system-not-ready:sensor heartbeat timeout"))
         rednet-host-timer (do
-                            (rednet.host protocol host)
-                            (global rednet-host-timer (os.startTimer rednet-host-interval))))))
-  (global desired-state (not (rs.getInput detector-side)))
-  (rs.setOutput clutch-side (clutch-output system-ready desired-state current-state))
-  (rs.setOutput direction-side (shaft-output desired-state current-state))
-  (rs.setOutput alarm-side (alarm-output desired-state current-state))
-  (print (.. "d: " (boolean-str desired-state)))
-  (print (.. "c: " (boolean-str current-state)))
-  (print (.. "sr: " (boolean-str system-ready)))
+                            (rednet.host c-protocol c-host)
+                            (global rednet-host-timer (os.startTimer rednet-host-interval)))))
+    (global desired-state (not (rs.getInput detector-side)))
+    (let [is-chunk-ready (chunk-ready (table.unpack event))]
+      (rs.setOutput clutch-side (clutch-output (and system-ready is-chunk-ready) desired-state current-state))
+      (rs.setOutput direction-side (shaft-output desired-state current-state))
+      (rs.setOutput alarm-side (alarm-output desired-state current-state))
+      (comment (chunk-ready (table.unpack event)))
+      (print (.. "d: " (boolean-str desired-state)))
+      (print (.. "c: " (boolean-str current-state)))
+      (print (.. "sr: " (boolean-str (and is-chunk-ready system-ready))))))
 )

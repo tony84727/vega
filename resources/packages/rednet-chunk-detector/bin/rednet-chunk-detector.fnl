@@ -4,5 +4,5 @@
     (rednet.open side)))
 (print (.. "broadcasting chunk heartbeat: " id))
 (while true
-  (rednet.broadcast id "chunk-heatbeat")
+  (rednet.broadcast id "chunk-heartbeat")
   (sleep 2.5))
