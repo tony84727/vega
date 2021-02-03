@@ -14,11 +14,11 @@
 (global rednet-host-timer (os.startTimer rednet-host-interval))
 
 (fn clutch-output
-  [system-ready desired-state current-state]
-  (and system-ready (~= desired-state current-state)))
+  [m-system-ready desired-state current-state]
+  (and m-system-ready (~= desired-state current-state)))
 (fn shaft-output
   [desired-state current-state]
-  (not desired-state))
+  desired-state)
 (fn alarm-output
   [desired-state current-state]
   (~= desired-state current-state))
@@ -29,18 +29,11 @@
 
 (rednet.host c-protocol c-host)
 
-(fn boolean-str
-  [b]
-  (if b
-      "true"
-      "false"))
-
-(local required-chunk [11 12])
 (local chunk-timeout 3)
-(fn some-is-nil
+(fn some-is-negative
   [t]
   (each [_ v (pairs t)]
-        (if (= v nil)
+        (if (< v 0)
             (lua "return true")))
   false)
 
@@ -55,16 +48,17 @@
       (do
         (when (= protocol "chunk-heartbeat")
           (let [origin-timer (. chunk-timers message)]
-            (when origin-timer
+            (when (>= origin-timer 0)
               (os.cancelTimer origin-timer)))
           (tset chunk-timers message (os.startTimer chunk-timeout))))
       ("timer" timer-id)
       (each [chunk-id chunk-timer (pairs chunk-timers)]
         (when (= chunk-timer timer-id)
           (print (.. "chunk " chunk-id " timed out"))
-          (tset chunk-timers chunk-id nil))))
-    (not (some-is-nil chunk-timers))))
-(global chunk-ready (new-chunk-ready-detector [11 12]))
+          (tset chunk-timers chunk-id -1))))
+    (not (some-is-negative chunk-timers))))
+
+(global chunk-ready (new-chunk-ready-detector [11 12 15 16 17]))
 
 (while true
   (let [event (table.pack (os.pullEvent))]
@@ -90,9 +84,4 @@
     (let [is-chunk-ready (chunk-ready (table.unpack event))]
       (rs.setOutput clutch-side (clutch-output (and system-ready is-chunk-ready) desired-state current-state))
       (rs.setOutput direction-side (shaft-output desired-state current-state))
-      (rs.setOutput alarm-side (alarm-output desired-state current-state))
-      (comment (chunk-ready (table.unpack event)))
-      (print (.. "d: " (boolean-str desired-state)))
-      (print (.. "c: " (boolean-str current-state)))
-      (print (.. "sr: " (boolean-str (and is-chunk-ready system-ready))))))
-)
+      (rs.setOutput alarm-side (alarm-output desired-state current-state)))))
