@@ -1,5 +1,5 @@
-(local open-side "top")
-(local close-side "bottom")
+(local open-side "bottom")
+(local close-side "right")
 (local protocol "window-controller")
 
 (each [_ s (ipairs (rs.getSides))]
