@@ -1,7 +1,7 @@
 (local upper-threshold 4.9)
 (local lower-threshold 4.5)
 (local reconcile-interval 5)
-(local output-side "right")
+(local output-side "top")
 (local component (peripheral.wrap "back"))
 (global current-state false)
 
