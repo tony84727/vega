@@ -1,4 +1,4 @@
-(local output-side "back")
+(local output-side "top")
 (local reconcile-interval 5)
 (local component (peripheral.wrap "bottom"))
 (rs.setAnalogOutput output-side 15)
