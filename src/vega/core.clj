@@ -30,7 +30,7 @@
 (defroutes all-routes
   (GET "/" [] hello)
   (GET "/packages/*" [] (packages/service "resources/packages/"))
-  (GET "/websocket" [] (partial debugging/handler debugging-pub))
+  (GET "/websocket" [] (partial messages/websocket-receiver (first @messages-broker)))
   (GET "/api/messages" [] (partial messages/websocket-handler (second @messages-broker)))
   (POST "/api/push_message" [] (partial messages/post-message-handler (first @messages-broker)))
   (POST "/log" [] (partial debugging/log-handler debugging-message-ch))
