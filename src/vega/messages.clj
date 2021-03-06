@@ -13,12 +13,18 @@
     (as-channel req
                 {:on-open (fn [ch] (let [sub-ch (async/chan)]
                                      (async/sub pub nil sub-ch)
+
                                      (async/go-loop []
                                        (when-let [message (async/<! sub-ch)]
                                          (send! ch message)
                                          (recur)))
                                      (reset! sub sub-ch)))
                  :on-close (fn [ch status] (async/unsub pub nil @sub) (async/close! @sub))})))
+
+(defn websocket-receiver
+  [out-ch req]
+  (as-channel req
+              {:on-receive (fn [ch message] (async/go (async/>! out-ch message)))}))
 
 (defn post-message-handler
   [output-ch request]
