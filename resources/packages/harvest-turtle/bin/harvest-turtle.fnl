@@ -2,7 +2,12 @@
 (local fuel "minecraft:coal")
 
 (fn log-location! []
-  (print (.. "location: " (textutils.serialize current-location))))
+  (when false 
+    (print (.. "location: " (textutils.serialize current-location)))))
+
+(fn log-orientation! []
+  (when false
+    (print (.. "orientation: " (textutils.serialize orientation)))))
 
 (fn get-seed [crop]
   (match crop
@@ -44,21 +49,27 @@
 
 (fn turn-right! []
   (when (turtle.turnRight)
-    (global orientation (rotate-orientation orientation -90))))
+    (global orientation (rotate-orientation orientation -90))
+    (log-orientation!)
+    true))
 
 (fn turn-left! []
   (when (turtle.turnLeft)
-    (global orientation (rotate-orientation orientation 90))))
+    (global orientation (rotate-orientation orientation 90))
+    (log-orientation!)
+    true))
 
 (fn forward! []
   (when (turtle.forward)
     (global current-location (vec-add current-location orientation))
-    (log-location!)))
+    (log-location!)
+    true))
 
 (fn back! []
   (when (turtle.back)
     (global current-location (vec-sub current-location orientation))
-    (log-location!)))
+    (log-location!)
+    true))
 
 (fn must! [f]
   (while true
@@ -103,7 +114,7 @@
       (let [turn! (if (> deg 0)
                      turn-left!
                      turn-right!)
-            steps (/ deg 90)]
+            steps (/ (abs deg) 90)]
         (for [_ 1 steps]
           (turn!))))))
 
@@ -168,40 +179,52 @@
       (when detail
         (if (= fuel detail.name)
             (set coal (+ coal (turtle.getItemCount i)))))))
-  (> coal 4))
+  (> coal 16))
 
 (fn refuel! []
   (for [i 1 16]
     (let [detail (turtle.getItemDetail i)]
-      (when detail
-        (if (= fuel detail.name)
-            (turtle.select i)
-            (turtle.refuel 1)
-            (lua "return true")))))
+      (when (and detail (= detail.name fuel))
+        (turtle.select i)
+        (turtle.refuel 1)
+        (lua "return true"))))
   false)
 
 (fn dump! []
   (move-to! [0 0])
+  (global switch-row-direction false)
+  (rotate-to-angle! [1 0])
   (for [i 2 16]
           (turtle.select i)
-          (turtle.dropDown))
-  (rotate-to-angle! [1 0]))
+          (turtle.dropDown)))
 
 (while true
   (let [(_ inspect-data) (turtle.inspectDown)]
-    (when (not (enough-fuel?))
-      (refuel!))
-    (when (not (enough-fuel-storage?))
-      (move-to! [0 0])
-      (rotate-to-angle! [1 0])
-      (turtle.select 1)
-      (turtle.suckUp 64))
-    (when (or (not (enough-storage?)) (= inspect-data.name "minecraft:oak_planks"))
-      (dump!))
-    (if (in-range? inspect-data)
-        (do 
-          (when (harvest? inspect-data) (harvest! inspect-data.name))
-          (forward!))
-        (do
-          (switch-row! switch-row-direction)
-          (global switch-row-direction (not switch-row-direction))))))
+    (if
+     (not (enough-storage?))
+     (do
+       (print "dump")
+       (dump!))
+     (= inspect-data.name "minecraft:oak_planks")
+     (do
+       (print "rtb")
+       (dump!)
+       (os.sleep 300))
+     (not (enough-fuel-storage?))
+     (do
+       (print "getting fuel")
+       (move-to! [0 0])
+       (global switch-row-direction false)
+       (rotate-to-angle! [1 0])
+       (turtle.select 1)
+       (turtle.suckUp (turtle.getItemSpace 1)))
+     (not (enough-fuel?))
+     (do (refuel!)
+         (print "refuel"))
+     (= inspect-data.name "minecraft:cobblestone")
+     (do
+       (switch-row! switch-row-direction)
+       (global switch-row-direction (not switch-row-direction)))
+     (harvest? inspect-data)
+     (harvest! inspect-data.name)
+     (forward!))))
