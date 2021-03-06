@@ -1,14 +1,18 @@
 (local targets ["minecraft:wheat" "minecraft:carrots" "minecraft:potatoes"])
 (local fuel "minecraft:coal")
 
+(fn log-location! []
+  (print (.. "location: " (textutils.serialize current-location))))
+
 (fn get-seed [crop]
   (match crop
     "minecraft:wheat" "minecraft:wheat_seeds"
     "minecraft:potatoes" "minecraft:potato"
+    "minecraft:carrots" "minecraft:carrot"
     crop))
 
 (global current-location [0 0])
-(global orientation [0 1])
+(global orientation [1 0])
 (global station-location nil)
 
 (fn rotate-orientation [v deg]
@@ -39,20 +43,27 @@
   [(- (. a 1) (. b 1)) (- (. a 2) (. b 2))])
 
 (fn turn-right! []
-  (turtle.turnRight)
-  (global orientation (rotate-orientation orientation -90)))
+  (when (turtle.turnRight)
+    (global orientation (rotate-orientation orientation -90))))
 
 (fn turn-left! []
-  (turtle.turnLeft)
-  (global orientation (rotate-orientation orientation 90)))
+  (when (turtle.turnLeft)
+    (global orientation (rotate-orientation orientation 90))))
 
 (fn forward! []
-  (turtle.forward)
-  (global current-location (vec-add current-location orientation)))
+  (when (turtle.forward)
+    (global current-location (vec-add current-location orientation))
+    (log-location!)))
 
 (fn back! []
-  (turtle.back)
-  (global current-location (vec-sub current-location orientation)))
+  (when (turtle.back)
+    (global current-location (vec-sub current-location orientation))
+    (log-location!)))
+
+(fn must! [f]
+  (while true
+    (when (f)
+        (lua "return true"))))
 
 (fn dot [a b]
   (+ (* (. a 1) (. b 1)) (* (. a 2) (. b 2))))
@@ -102,9 +113,9 @@
       (let [x (. diff 1)
             y (. diff 2)]
         (rotate-to-angle! (if (< x 0) [-1 0] [1 0]))
-        (for [_ 1 (abs x)] (forward!))
+        (for [_ 1 (abs x)] (must! (fn [] (forward!))))
         (rotate-to-angle! (if (< y 0) [0 -1] [0 1]))
-        (for [_ 1 (abs y)] (forward!))))))
+        (for [_ 1 (abs y)] (must! (fn [] (forward!))))))))
 
 (fn harvest? [inspect-data]
   (each [_ t (ipairs targets)]
@@ -169,18 +180,24 @@
             (lua "return true")))))
   false)
 
+(fn dump! []
+  (move-to! [0 0])
+  (for [i 2 16]
+          (turtle.select i)
+          (turtle.dropDown))
+  (rotate-to-angle! [1 0]))
+
 (while true
   (let [(_ inspect-data) (turtle.inspectDown)]
     (when (not (enough-fuel?))
       (refuel!))
     (when (not (enough-fuel-storage?))
       (move-to! [0 0])
+      (rotate-to-angle! [1 0])
       (turtle.select 1)
       (turtle.suckUp 64))
-    (when (not (enough-storage?))
-        (move-to! [0 0])
-        (for [i 2 16]
-          (turtle.dropDown i)))
+    (when (or (not (enough-storage?)) (= inspect-data.name "minecraft:oak_planks"))
+      (dump!))
     (if (in-range? inspect-data)
         (do 
           (when (harvest? inspect-data) (harvest! inspect-data.name))
