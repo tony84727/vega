@@ -7,10 +7,12 @@
 
 (def ^:private keyspace-name "vega")
 
-(def get-session!
-  (memoize (fn [keyspace-name] (let [config {:contact-points ["localhost"]}]
-                                 (alia/session (if keyspace-name (assoc config :session-keyspace keyspace-name)
-                                                   config))))))
+(defn get-session!
+  ([keyspace-name]
+   (let [config {:contact-points ["localhost"]}]
+     (alia/session (if keyspace-name (assoc config :session-keyspace keyspace-name) config))))
+  ([] (get-session! nil)))
+
 
 (defn create-keyspace!
   "create a keyspace with SimpleStrategy with replication factor 1"
