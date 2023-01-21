@@ -49,6 +49,9 @@ impl<R> HttpRepository<R>
 where
     R: Repository + Send + Clone,
 {
+    pub fn new(repository: R) -> Self {
+        Self { repository }
+    }
     pub fn filters(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         warp::get().and(self.manifest().or(self.get_content()))
     }

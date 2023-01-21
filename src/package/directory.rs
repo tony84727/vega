@@ -7,6 +7,7 @@ use std::{
     path::PathBuf,
 };
 
+#[derive(Clone)]
 pub struct DirectoryRepository {
     root: PathBuf,
 }
@@ -62,7 +63,7 @@ impl Repository for DirectoryRepository {
                     let mut hasher = md5::Md5::new();
                     hasher.update(content);
                     Some(File {
-                        checksum: format!("{:x?}", hasher.finalize()),
+                        checksum: format!("{:x}", hasher.finalize()),
                         install_path: install_path.to_string_lossy().to_string(),
                     })
                 })
@@ -105,6 +106,7 @@ mod tests {
                 .map(|file| file.install_path.to_string())
                 .collect::<Vec<String>>()
         );
+        assert!(files.iter().all(|file| file.checksum.len() == 32));
         assert!(matches!(
             repository.list_files("doomsday_device").unwrap_err(),
             RepositoryError::NotFound
