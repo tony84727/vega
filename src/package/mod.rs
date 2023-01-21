@@ -1,6 +1,11 @@
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use warp::{http::StatusCode, reply::json, Filter, Reply};
+use warp::{
+    http::StatusCode,
+    path::{param, tail, Tail},
+    reply::json,
+    Filter, Reply,
+};
 pub mod directory;
 pub mod middleware;
 
@@ -68,12 +73,16 @@ where
     }
     fn get_content(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         let repository = self.repository.clone();
-        warp::path!("packages" / String / String).map(move |package: String, path: String| {
-            let reply: Box<dyn Reply> = match repository.get_file(&package, &path) {
-                Ok(content) => Box::new(content),
-                Err(err) => err.into(),
-            };
-            reply
-        })
+        warp::get()
+            .and(warp::path("packages"))
+            .and(param::<String>())
+            .and(tail())
+            .map(move |package: String, path: Tail| {
+                let reply: Box<dyn Reply> = match repository.get_file(&package, path.as_str()) {
+                    Ok(content) => Box::new(content),
+                    Err(err) => err.into(),
+                };
+                reply
+            })
     }
 }

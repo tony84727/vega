@@ -1,8 +1,12 @@
+use std::sync::Arc;
+
+use crate::fennel;
+
 use super::{File, Repository, RepositoryError};
 
-pub type Middleware = dyn Fn(&str, Vec<u8>) -> Result<Vec<u8>, RepositoryError>;
+pub type Middleware = dyn Fn(&str, Vec<u8>) -> Result<Vec<u8>, RepositoryError> + Send + Sync;
 
-struct RepositoryWithMiddleware<R>
+pub struct RepositoryWithMiddleware<R>
 where
     R: Repository,
 {
@@ -38,10 +42,29 @@ where
     fn get_file(&self, package: &str, path: &str) -> Result<Vec<u8>, RepositoryError> {
         let mut result = self.repository.get_file(package, path)?;
         for middleware in self.content_middlewares.iter() {
-            result = middleware(package, result)?;
+            result = middleware(path, result)?;
         }
         Ok(result)
     }
+}
+
+impl<R> Repository for Arc<RepositoryWithMiddleware<R>>
+where
+    R: Repository,
+{
+    fn list_files(&self, package: &str) -> Result<Vec<File>, RepositoryError> {
+        (**self).list_files(package)
+    }
+    fn get_file(&self, package: &str, path: &str) -> Result<Vec<u8>, RepositoryError> {
+        (**self).get_file(package, path)
+    }
+}
+
+pub fn compile_fennel(path: &str, content: Vec<u8>) -> Result<Vec<u8>, RepositoryError> {
+    if !path.ends_with(".fnl") {
+        return Ok(content);
+    }
+    fennel::compile(content).map_err(|err| RepositoryError::Other(err.into()))
 }
 
 #[cfg(test)]

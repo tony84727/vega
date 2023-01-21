@@ -4,11 +4,15 @@ use std::{
 };
 
 use crossbeam::{channel::unbounded, select};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum CompileError {
+    #[error("fennel compilation IO issues {0}")]
     IO(io::Error),
+    #[error("fennel compilation fail to open stdin of the compiler")]
     FailToOpenStdIn,
+    #[error("fennel compilation fail to write stdin")]
     WriteStdIn,
 }
 
