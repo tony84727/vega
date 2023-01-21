@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use warp::{http::StatusCode, reply::json, Filter, Reply};
 pub mod directory;
+pub mod middleware;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct File {
