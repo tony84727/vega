@@ -88,16 +88,20 @@ where
         let repository = self.repository.clone();
         let external_url = self.external_url.clone();
         warp::path!("packages" / String / "manifest").map(move |package: String| {
-            let reply: Box<dyn Reply> = match repository.list_files(&package).map(|metadata| {
-                metadata
-                    .into_iter()
-                    .map(|metadata| HttpFileMetadata::new(metadata, &external_url, &package))
-                    .collect::<Vec<HttpFileMetadata>>()
-            }) {
-                Ok(files) => Box::new(json(&files)),
-                Err(err) => err.into(),
-            };
-            reply
+            Self::handle_repository_result(
+                "manifest",
+                repository
+                    .list_files(&package)
+                    .map(|metadata| {
+                        metadata
+                            .into_iter()
+                            .map(|metadata| {
+                                HttpFileMetadata::new(metadata, &external_url, &package)
+                            })
+                            .collect::<Vec<HttpFileMetadata>>()
+                    })
+                    .map(|result| json(&result)),
+            )
         })
     }
     fn get_content(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
@@ -107,11 +111,23 @@ where
             .and(param::<String>())
             .and(tail())
             .map(move |package: String, path: Tail| {
-                let reply: Box<dyn Reply> = match repository.get_file(&package, path.as_str()) {
-                    Ok(content) => Box::new(content),
-                    Err(err) => err.into(),
-                };
-                reply
+                Self::handle_repository_result(
+                    "get_content",
+                    repository.get_file(&package, path.as_str()),
+                )
             })
+    }
+    fn handle_repository_result<T: Reply + 'static>(
+        method: &str,
+        result: Result<T, RepositoryError>,
+    ) -> Box<dyn Reply> {
+        match result.map(|result| result.into()) {
+            Ok(content) => Box::<T>::new(content),
+            Err(RepositoryError::Other(inner)) => {
+                log::error!("{} error: {:?}", method, inner);
+                Box::new(StatusCode::INTERNAL_SERVER_ERROR)
+            }
+            Err(err) => err.into(),
+        }
     }
 }
