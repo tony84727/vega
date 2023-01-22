@@ -113,15 +113,29 @@ mod tests {
 
     use super::DirectoryRepository;
 
+    struct DirectoryRepositoryTesting {
+        #[allow(dead_code)]
+        test_dir: TemporaryDirectory,
+        repository: DirectoryRepository,
+    }
+
+    impl DirectoryRepositoryTesting {
+        fn new(paths: &[&str]) -> Self {
+            let test_dir = TemporaryDirectory::new_random().unwrap();
+            create_dummy_files(test_dir.root(), paths);
+            let repository = DirectoryRepository::new(test_dir.root().to_owned());
+            Self {
+                test_dir,
+                repository,
+            }
+        }
+    }
+
     #[test]
     fn test_list_files() {
-        let test_dir = TemporaryDirectory::new_random().unwrap();
-        create_dummy_files(
-            test_dir.root(),
-            &["loader/bin/loader.lua", "loader/data/config.json"],
-        );
-        let repository = DirectoryRepository::new(test_dir.root().to_owned());
-        let files = repository.list_files("loader").unwrap();
+        let testing =
+            DirectoryRepositoryTesting::new(&["loader/bin/loader.lua", "loader/data/config.json"]);
+        let files = testing.repository.list_files("loader").unwrap();
         assert_eq!(2, files.len());
         assert_eq!(
             vec!["bin/loader.lua", "data/config.json"],
@@ -132,22 +146,22 @@ mod tests {
         );
         assert!(files.iter().all(|file| file.checksum.len() == 32));
         assert!(matches!(
-            repository.list_files("doomsday_device").unwrap_err(),
+            testing
+                .repository
+                .list_files("doomsday_device")
+                .unwrap_err(),
             RepositoryError::NotFound
         ));
     }
 
     #[test]
     fn test_get_file() {
-        let test_dir = TemporaryDirectory::new_random().unwrap();
-        create_dummy_files(
-            test_dir.root(),
-            &["loader/bin/loader.lua", "loader/data/config.json"],
-        );
-        let repository = DirectoryRepository::new(test_dir.root().to_owned());
+        let testing =
+            DirectoryRepositoryTesting::new(&["loader/bin/loader.lua", "loader/data/config.json"]);
         assert_eq!(
             b"content of loader/bin/loader.lua",
-            repository
+            testing
+                .repository
                 .get_file("loader", "bin/loader.lua")
                 .unwrap()
                 .as_slice(),
@@ -155,19 +169,42 @@ mod tests {
     }
 
     #[test]
+    fn test_get_file_non_exists() {
+        let testing =
+            DirectoryRepositoryTesting::new(&["loader/bin/loader.lua", "loader/data/config.json"]);
+        assert!(matches!(
+            testing
+                .repository
+                .get_file("loader", "bin/loader.java")
+                .unwrap_err(),
+            RepositoryError::NotFound
+        ));
+    }
+
+    #[test]
     fn test_get_metadata() {
-        let test_dir = TemporaryDirectory::new_random().unwrap();
-        create_dummy_files(
-            test_dir.root(),
-            &["loader/bin/loader.lua", "loader/data/config.json"],
-        );
-        let repository = DirectoryRepository::new(test_dir.root().to_owned());
+        let testing =
+            DirectoryRepositoryTesting::new(&["loader/bin/loader.lua", "loader/data/config.json"]);
         assert_eq!(
             "bin/loader.lua",
-            repository
+            testing
+                .repository
                 .get_metadata("loader", "bin/loader.lua")
                 .unwrap()
                 .install_path
         );
+    }
+
+    #[test]
+    fn test_get_metadata_non_exists() {
+        let testing =
+            DirectoryRepositoryTesting::new(&["loader/bin/loader.lua", "loader/data/config.json"]);
+        assert!(matches!(
+            testing
+                .repository
+                .get_metadata("loader", "bin/loader.java")
+                .unwrap_err(),
+            RepositoryError::NotFound,
+        ),)
     }
 }
