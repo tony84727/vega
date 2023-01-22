@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 use vega::package::directory::DirectoryRepository;
-use vega::package::middleware::{compile_fennel, RepositoryWithMiddleware};
+use vega::package::middleware::{compile_fennel, insert_checksum_header, RepositoryWithMiddleware};
 use vega::package::HttpRepository;
 
 #[tokio::main]
@@ -9,6 +9,7 @@ async fn main() {
     let repository = DirectoryRepository::new(PathBuf::new().join("packages"));
     let mut with_middleware = RepositoryWithMiddleware::new(repository);
     with_middleware.apply(Box::new(compile_fennel));
+    with_middleware.apply(Box::new(insert_checksum_header));
 
     let http = HttpRepository::new(Arc::new(with_middleware));
 

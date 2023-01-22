@@ -7,6 +7,7 @@ use super::{FileMetadata, Repository, RepositoryError};
 #[derive(Clone)]
 pub struct Metadata<'m> {
     pub path: &'m str,
+    pub metadata: &'m FileMetadata,
 }
 pub type Middleware = dyn Fn(Metadata, Vec<u8>) -> Result<Vec<u8>, RepositoryError> + Send + Sync;
 
@@ -44,8 +45,12 @@ where
     }
 
     fn get_file(&self, package: &str, path: &str) -> Result<Vec<u8>, RepositoryError> {
+        let metadata = self.repository.get_metadata(package, path)?;
         let mut result = self.repository.get_file(package, path)?;
-        let metadata = Metadata { path };
+        let metadata = Metadata {
+            path,
+            metadata: &metadata,
+        };
         for middleware in self.content_middlewares.iter() {
             result = middleware(metadata.clone(), result)?;
         }
@@ -78,8 +83,14 @@ pub fn compile_fennel(metadata: Metadata, content: Vec<u8>) -> Result<Vec<u8>, R
     fennel::compile(content).map_err(|err| RepositoryError::Other(err.into()))
 }
 
-pub fn insert_header(path: &str, content: Vec<u8>) -> Result<Vec<u8>, RepositoryError> {
-    todo!();
+pub fn insert_checksum_header(
+    metadata: Metadata,
+    mut content: Vec<u8>,
+) -> Result<Vec<u8>, RepositoryError> {
+    let header = format!("--[[{}]]--\n", metadata.metadata.checksum);
+    let mut all = header.into_bytes();
+    all.append(&mut content);
+    Ok(all)
 }
 
 #[cfg(test)]
