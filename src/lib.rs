@@ -1,3 +1,4 @@
+pub mod config;
 pub mod fennel;
 pub mod package;
 #[cfg(test)]

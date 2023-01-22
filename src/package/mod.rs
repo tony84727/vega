@@ -6,10 +6,10 @@ use warp::{
     reply::json,
     Filter, Reply,
 };
+
+use crate::config::ServerConfig;
 pub mod directory;
 pub mod middleware;
-
-const EXTERNAL_URL: &str = "http://localhost:3030";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FileMetadata {
@@ -69,25 +69,30 @@ where
     R: Repository + Send + Clone,
 {
     repository: R,
+    external_url: String,
 }
 
 impl<R> HttpRepository<R>
 where
     R: Repository + Send + Clone,
 {
-    pub fn new(repository: R) -> Self {
-        Self { repository }
+    pub fn new(repository: R, config: &ServerConfig) -> Self {
+        Self {
+            repository,
+            external_url: config.external_url.clone().unwrap(),
+        }
     }
     pub fn filters(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         warp::get().and(self.manifest().or(self.get_content()))
     }
     fn manifest(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         let repository = self.repository.clone();
+        let external_url = self.external_url.clone();
         warp::path!("packages" / String / "manifest").map(move |package: String| {
             let reply: Box<dyn Reply> = match repository.list_files(&package).map(|metadata| {
                 metadata
                     .into_iter()
-                    .map(|metadata| HttpFileMetadata::new(metadata, EXTERNAL_URL, &package))
+                    .map(|metadata| HttpFileMetadata::new(metadata, &external_url, &package))
                     .collect::<Vec<HttpFileMetadata>>()
             }) {
                 Ok(files) => Box::new(json(&files)),

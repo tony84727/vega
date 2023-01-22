@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
+use vega::config::load_server_config;
 use vega::package::directory::DirectoryRepository;
 use vega::package::middleware::{compile_fennel, insert_checksum_header, RepositoryWithMiddleware};
 use vega::package::HttpRepository;
@@ -10,8 +11,9 @@ async fn main() {
     let mut with_middleware = RepositoryWithMiddleware::new(repository);
     with_middleware.apply(Box::new(compile_fennel));
     with_middleware.apply(Box::new(insert_checksum_header));
+    let config = load_server_config();
 
-    let http = HttpRepository::new(Arc::new(with_middleware));
+    let http = HttpRepository::new(Arc::new(with_middleware), &config);
 
     warp::serve(http.filters())
         .run(([127, 0, 0, 1], 3030))
