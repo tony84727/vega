@@ -10,7 +10,7 @@ pub mod directory;
 pub mod middleware;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct File {
+pub struct FileMetadata {
     pub checksum: String,
     #[serde(rename = "installPath")]
     pub install_path: String,
@@ -19,7 +19,7 @@ pub struct File {
 #[derive(Serialize, Deserialize)]
 struct Manifest {
     checksum: String,
-    files: Vec<File>,
+    files: Vec<FileMetadata>,
 }
 
 #[derive(Error, Debug)]
@@ -40,8 +40,9 @@ impl Into<Box<dyn Reply>> for RepositoryError {
 }
 
 pub trait Repository {
-    fn list_files(&self, package: &str) -> Result<Vec<File>, RepositoryError>;
+    fn list_files(&self, package: &str) -> Result<Vec<FileMetadata>, RepositoryError>;
     fn get_file(&self, package: &str, path: &str) -> Result<Vec<u8>, RepositoryError>;
+    fn get_metadata(&self, package: &str, path: &str) -> Result<FileMetadata, RepositoryError>;
 }
 
 pub struct HttpRepository<R>

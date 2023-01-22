@@ -2,9 +2,13 @@ use std::sync::Arc;
 
 use crate::fennel;
 
-use super::{File, Repository, RepositoryError};
+use super::{FileMetadata, Repository, RepositoryError};
 
-pub type Middleware = dyn Fn(&str, Vec<u8>) -> Result<Vec<u8>, RepositoryError> + Send + Sync;
+#[derive(Clone)]
+pub struct Metadata<'m> {
+    pub path: &'m str,
+}
+pub type Middleware = dyn Fn(Metadata, Vec<u8>) -> Result<Vec<u8>, RepositoryError> + Send + Sync;
 
 pub struct RepositoryWithMiddleware<R>
 where
@@ -35,16 +39,20 @@ impl<R> Repository for RepositoryWithMiddleware<R>
 where
     R: Repository,
 {
-    fn list_files(&self, package: &str) -> Result<Vec<File>, RepositoryError> {
+    fn list_files(&self, package: &str) -> Result<Vec<FileMetadata>, RepositoryError> {
         self.repository.list_files(package)
     }
 
     fn get_file(&self, package: &str, path: &str) -> Result<Vec<u8>, RepositoryError> {
         let mut result = self.repository.get_file(package, path)?;
+        let metadata = Metadata { path };
         for middleware in self.content_middlewares.iter() {
-            result = middleware(path, result)?;
+            result = middleware(metadata.clone(), result)?;
         }
         Ok(result)
+    }
+    fn get_metadata(&self, package: &str, path: &str) -> Result<FileMetadata, RepositoryError> {
+        self.repository.get_metadata(package, path)
     }
 }
 
@@ -52,19 +60,26 @@ impl<R> Repository for Arc<RepositoryWithMiddleware<R>>
 where
     R: Repository,
 {
-    fn list_files(&self, package: &str) -> Result<Vec<File>, RepositoryError> {
+    fn list_files(&self, package: &str) -> Result<Vec<FileMetadata>, RepositoryError> {
         (**self).list_files(package)
     }
     fn get_file(&self, package: &str, path: &str) -> Result<Vec<u8>, RepositoryError> {
         (**self).get_file(package, path)
     }
+    fn get_metadata(&self, package: &str, path: &str) -> Result<FileMetadata, RepositoryError> {
+        (**self).get_metadata(package, path)
+    }
 }
 
-pub fn compile_fennel(path: &str, content: Vec<u8>) -> Result<Vec<u8>, RepositoryError> {
-    if !path.ends_with(".fnl") {
+pub fn compile_fennel(metadata: Metadata, content: Vec<u8>) -> Result<Vec<u8>, RepositoryError> {
+    if !metadata.path.ends_with(".fnl") {
         return Ok(content);
     }
     fennel::compile(content).map_err(|err| RepositoryError::Other(err.into()))
+}
+
+pub fn insert_header(path: &str, content: Vec<u8>) -> Result<Vec<u8>, RepositoryError> {
+    todo!();
 }
 
 #[cfg(test)]

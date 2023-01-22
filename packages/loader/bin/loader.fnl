@@ -169,4 +169,4 @@
 (match (. args 1)
   "ensure" (ensure-package (. args 2))
   "uninstall" (uninstall-package (. args 2))
-  (print "loader ready"))
+  _ (print "loader ready"))
