@@ -9,14 +9,15 @@ pub struct Metadata<'m> {
     pub path: &'m str,
     pub metadata: &'m FileMetadata,
 }
-pub type Middleware = dyn Fn(Metadata, Vec<u8>) -> Result<Vec<u8>, RepositoryError> + Send + Sync;
+pub type ContentMiddleware =
+    dyn Fn(Metadata, Vec<u8>) -> Result<Vec<u8>, RepositoryError> + Send + Sync;
 
 pub struct RepositoryWithMiddleware<R>
 where
     R: Repository,
 {
     repository: R,
-    content_middlewares: Vec<Box<Middleware>>,
+    content_middlewares: Vec<Box<ContentMiddleware>>,
 }
 
 impl<R> RepositoryWithMiddleware<R>
@@ -30,7 +31,7 @@ where
         }
     }
 
-    pub fn apply(&mut self, middleware: Box<Middleware>) -> &mut Self {
+    pub fn apply(&mut self, middleware: Box<ContentMiddleware>) -> &mut Self {
         self.content_middlewares.push(middleware);
         self
     }

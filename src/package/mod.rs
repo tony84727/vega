@@ -9,11 +9,30 @@ use warp::{
 pub mod directory;
 pub mod middleware;
 
+const EXTERNAL_URL: &str = "http://localhost:3030";
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FileMetadata {
     pub checksum: String,
     #[serde(rename = "installPath")]
     pub install_path: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct HttpFileMetadata {
+    #[serde(flatten)]
+    metadata: FileMetadata,
+    url: String,
+}
+
+impl HttpFileMetadata {
+    fn new(metadata: FileMetadata, external_url: &str, package: &str) -> Self {
+        let url = format!(
+            "{}/packages/{}/{}",
+            external_url, package, metadata.install_path
+        );
+        Self { metadata, url }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -65,7 +84,12 @@ where
     fn manifest(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         let repository = self.repository.clone();
         warp::path!("packages" / String / "manifest").map(move |package: String| {
-            let reply: Box<dyn Reply> = match repository.list_files(&package) {
+            let reply: Box<dyn Reply> = match repository.list_files(&package).map(|metadata| {
+                metadata
+                    .into_iter()
+                    .map(|metadata| HttpFileMetadata::new(metadata, EXTERNAL_URL, &package))
+                    .collect::<Vec<HttpFileMetadata>>()
+            }) {
                 Ok(files) => Box::new(json(&files)),
                 Err(err) => err.into(),
             };
