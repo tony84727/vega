@@ -1,8 +1,10 @@
 use glob::glob;
+use regex::Regex;
 
 use super::{FileMetadata, Repository, RepositoryError};
 use md5::Digest;
 use std::{
+    borrow::Cow,
     io::{self, ErrorKind, Read},
     path::{Path, PathBuf},
 };
@@ -16,9 +18,17 @@ impl FileMetadata {
         let mut hasher = md5::Md5::new();
         hasher.update(content);
         Ok(FileMetadata {
+            path: install_path.as_ref().to_string(),
             checksum: format!("{:x}", hasher.finalize()),
-            install_path: install_path.as_ref().to_owned(),
+            install_path: Self::replace_source_extension_to_compiled_extension(
+                install_path.as_ref(),
+            )
+            .to_string(),
         })
+    }
+    fn replace_source_extension_to_compiled_extension(install_path: &str) -> Cow<str> {
+        let pattern = Regex::new(r#"\.fnl$"#).expect("valid regex pattern");
+        pattern.replace(install_path, ".lua")
     }
 }
 

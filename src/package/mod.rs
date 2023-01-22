@@ -13,6 +13,8 @@ pub mod middleware;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FileMetadata {
+    #[serde(skip_serializing)]
+    pub path: String,
     pub checksum: String,
     #[serde(rename = "installPath")]
     pub install_path: String,
@@ -27,10 +29,7 @@ pub struct HttpFileMetadata {
 
 impl HttpFileMetadata {
     fn new(metadata: FileMetadata, external_url: &str, package: &str) -> Self {
-        let url = format!(
-            "{}/packages/{}/{}",
-            external_url, package, metadata.install_path
-        );
+        let url = format!("{}/packages/{}/{}", external_url, package, metadata.path);
         Self { metadata, url }
     }
 }
