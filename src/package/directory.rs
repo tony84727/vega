@@ -50,11 +50,18 @@ impl DirectoryRepository {
         self.root.join(package)
     }
 
-    fn read_file(&self, package: &str, path: &str) -> io::Result<Vec<u8>> {
-        let mut file = std::fs::File::open(self.package_root(package).join(path))?;
-        let mut buf = vec![];
-        file.read_to_end(&mut buf)?;
-        Ok(buf)
+    fn assert_normal_file<P: AsRef<Path>>(target: P) -> Result<(), RepositoryError> {
+        if std::fs::metadata(&target)
+            .map_err(|err| match err {
+                err if err.kind() == ErrorKind::NotFound => RepositoryError::NotFound,
+                err => RepositoryError::Other(err.into()),
+            })?
+            .is_file()
+        {
+            Ok(())
+        } else {
+            Err(RepositoryError::NotFound)
+        }
     }
 }
 
@@ -86,14 +93,19 @@ impl Repository for DirectoryRepository {
             .collect())
     }
     fn get_file(&self, package: &str, path: &str) -> Result<Vec<u8>, RepositoryError> {
-        self.read_file(package, path).map_err(|err| match err {
-            err if err.kind() == ErrorKind::NotFound => RepositoryError::NotFound,
-            err => RepositoryError::Other(err.into()),
-        })
+        let target = self.package_root(package).join(path);
+        Self::assert_normal_file(&target)?;
+        let mut file =
+            std::fs::File::open(target).map_err(|err| RepositoryError::Other(err.into()))?;
+        let mut buf = vec![];
+        file.read_to_end(&mut buf)
+            .map_err(|err| RepositoryError::Other(err.into()))?;
+        Ok(buf)
     }
     fn get_metadata(&self, package: &str, path: &str) -> Result<FileMetadata, RepositoryError> {
-        let package_root = self.root.join(package);
-        FileMetadata::from_path_and_install_path(package_root.join(path), path)
+        let target = self.package_root(package).join(path);
+        Self::assert_normal_file(&target)?;
+        FileMetadata::from_path_and_install_path(target, path)
     }
 }
 
@@ -167,6 +179,15 @@ mod tests {
                 .as_slice(),
         );
     }
+    #[test]
+    fn test_get_file_emtpy_path() {
+        let testing =
+            DirectoryRepositoryTesting::new(&["loader/bin/loader.lua", "loader/data/config.json"]);
+        assert!(matches!(
+            testing.repository.get_file("loader", "").unwrap_err(),
+            RepositoryError::NotFound
+        ));
+    }
 
     #[test]
     fn test_get_file_non_exists() {
@@ -206,5 +227,15 @@ mod tests {
                 .unwrap_err(),
             RepositoryError::NotFound,
         ),)
+    }
+
+    #[test]
+    fn test_get_metadata_empty_path() {
+        let testing =
+            DirectoryRepositoryTesting::new(&["loader/bin/loader.lua", "loader/data/config.json"]);
+        assert!(matches!(
+            testing.repository.get_metadata("loader", "").unwrap_err(),
+            RepositoryError::NotFound,
+        ));
     }
 }

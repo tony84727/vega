@@ -45,7 +45,7 @@ pub enum RepositoryError {
     #[error("not found")]
     NotFound,
     #[error("other {0}")]
-    Other(anyhow::Error),
+    Other(#[from] anyhow::Error),
 }
 
 impl Into<Box<dyn Reply>> for RepositoryError {

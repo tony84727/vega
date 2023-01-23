@@ -50,6 +50,7 @@ impl Drop for TemporaryDirectory {
     }
 }
 
+#[cfg(test)]
 mod tests {
 
     use super::TemporaryDirectory;

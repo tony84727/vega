@@ -17,6 +17,7 @@ crossbeam = "0"
 regex = "1"
 log = "0"
 env_logger = "0"
+rand = "0"
 
 [dependencies.tokio]
 version = "1"
@@ -25,7 +26,4 @@ features = ["full"]
 [dependencies.serde]
 version = "1"
 features = ["derive"]
-
-[dev-dependencies]
-rand = "0"
 
