@@ -1,10 +1,13 @@
+use std::pin::Pin;
+
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use warp::{
     http::StatusCode,
     path::{param, tail, Tail},
+    reject::Reject,
     reply::json,
-    Filter, Reply,
+    Filter, Future, Rejection, Reply,
 };
 
 use crate::config::ServerConfig;
@@ -48,6 +51,8 @@ pub enum RepositoryError {
     Other(#[from] anyhow::Error),
 }
 
+impl Reject for RepositoryError {}
+
 impl Into<Box<dyn Reply>> for RepositoryError {
     fn into(self) -> Box<dyn Reply> {
         Box::new(match self {
@@ -73,7 +78,7 @@ where
 
 impl<R> HttpRepository<R>
 where
-    R: Repository + Send + Clone,
+    R: Repository + Sync + Send + Clone,
 {
     pub fn new(repository: R, config: &ServerConfig) -> Self {
         Self {
@@ -82,14 +87,21 @@ where
         }
     }
     pub fn filters(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
-        warp::get().and(self.manifest().or(self.get_content()))
+        warp::get().and(
+            self.manifest()
+                .recover(Self::recover_repository_error("manifest"))
+                .or(self
+                    .get_content()
+                    .recover(Self::recover_repository_error("get_content"))),
+        )
     }
     fn manifest(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         let repository = self.repository.clone();
         let external_url = self.external_url.clone();
-        warp::path!("packages" / String / "manifest").map(move |package: String| {
-            Self::handle_repository_result(
-                "manifest",
+        warp::path!("packages" / String / "manifest").and_then(move |package: String| {
+            let repository = repository.clone();
+            let external_url = external_url.clone();
+            async move {
                 repository
                     .list_files(&package)
                     .map(|metadata| {
@@ -100,8 +112,9 @@ where
                             })
                             .collect::<Vec<HttpFileMetadata>>()
                     })
-                    .map(|result| json(&result)),
-            )
+                    .map(|result| json(&result))
+                    .map_err(warp::reject::custom)
+            }
         })
     }
     fn get_content(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
@@ -110,24 +123,34 @@ where
             .and(warp::path("packages"))
             .and(param::<String>())
             .and(tail())
-            .map(move |package: String, path: Tail| {
-                Self::handle_repository_result(
-                    "get_content",
-                    repository.get_file(&package, path.as_str()),
-                )
+            .and_then(move |package: String, path: Tail| {
+                let repository = repository.clone();
+                async move {
+                    repository
+                        .get_file(&package, path.as_str())
+                        .map_err(warp::reject::custom)
+                }
             })
     }
-    fn handle_repository_result<T: Reply + 'static>(
-        method: &str,
-        result: Result<T, RepositoryError>,
-    ) -> Box<dyn Reply> {
-        match result.map(|result| result.into()) {
-            Ok(content) => Box::<T>::new(content),
-            Err(RepositoryError::Other(inner)) => {
-                log::error!("{} error: {:?}", method, inner);
-                Box::new(StatusCode::INTERNAL_SERVER_ERROR)
-            }
-            Err(err) => err.into(),
+    fn recover_repository_error(
+        name: &str,
+    ) -> impl Fn(
+        Rejection,
+    ) -> Pin<Box<dyn Future<Output = Result<StatusCode, Rejection>> + Sync + Send>>
+           + Clone {
+        let name = name.to_owned();
+        move |rejection: Rejection| {
+            let name = name.clone();
+            Box::pin(async move {
+                match rejection.find::<RepositoryError>() {
+                    Some(RepositoryError::NotFound) => Ok(StatusCode::NOT_FOUND),
+                    Some(RepositoryError::Other(inner)) => {
+                        log::error!("{} error: {:?}", name, inner);
+                        Ok(StatusCode::INTERNAL_SERVER_ERROR)
+                    }
+                    _ => Err(rejection),
+                }
+            })
         }
     }
 }
