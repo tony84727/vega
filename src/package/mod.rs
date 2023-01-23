@@ -98,24 +98,29 @@ where
     fn manifest(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         let repository = self.repository.clone();
         let external_url = self.external_url.clone();
-        warp::path!("packages" / String / "manifest").and_then(move |package: String| {
-            let repository = repository.clone();
-            let external_url = external_url.clone();
-            async move {
-                repository
-                    .list_files(&package)
-                    .map(|metadata| {
-                        metadata
-                            .into_iter()
-                            .map(|metadata| {
-                                HttpFileMetadata::new(metadata, &external_url, &package)
-                            })
-                            .collect::<Vec<HttpFileMetadata>>()
-                    })
-                    .map(|result| json(&result))
-                    .map_err(warp::reject::custom)
-            }
-        })
+        warp::path!("packages" / String)
+            .and(warp::filters::query::raw())
+            .and_then(move |package: String, query: String| {
+                let repository = repository.clone();
+                let external_url = external_url.clone();
+                async move {
+                    if query != "manifest" {
+                        return Err(warp::reject());
+                    }
+                    repository
+                        .list_files(&package)
+                        .map(|metadata| {
+                            metadata
+                                .into_iter()
+                                .map(|metadata| {
+                                    HttpFileMetadata::new(metadata, &external_url, &package)
+                                })
+                                .collect::<Vec<HttpFileMetadata>>()
+                        })
+                        .map(|result| json(&result))
+                        .map_err(warp::reject::custom)
+                }
+            })
     }
     fn get_content(&self) -> impl Filter<Extract = impl Reply, Error = warp::Rejection> + Clone {
         let repository = self.repository.clone();
