@@ -61,7 +61,7 @@
 (fn get-manifest
   [pkg]
   (let [manifest (http-get (package-url-with-query-string package-repository pkg "manifest"))]
-    (textutils.unserialize manifest)))
+    (textutils.unserializeJSON manifest)))
 (fn local-manifest-path
   [pkg]
   (.. "/home/.loader/manifests/" pkg ".manifest"))

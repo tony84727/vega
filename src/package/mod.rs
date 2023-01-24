@@ -1,5 +1,6 @@
 use std::pin::Pin;
 
+use md5::Digest;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use warp::{
@@ -32,7 +33,7 @@ pub struct HttpFileMetadata {
 
 impl HttpFileMetadata {
     fn new(metadata: FileMetadata, external_url: &str, package: &str) -> Self {
-        let url = format!("{}/packages/{}/{}", external_url, package, metadata.path);
+        let url = format!("packages/{}/{}", package, metadata.path);
         Self { metadata, url }
     }
 }
@@ -40,7 +41,21 @@ impl HttpFileMetadata {
 #[derive(Serialize, Deserialize)]
 struct Manifest {
     checksum: String,
-    files: Vec<FileMetadata>,
+    files: Vec<HttpFileMetadata>,
+}
+
+impl From<Vec<HttpFileMetadata>> for Manifest {
+    fn from(files: Vec<HttpFileMetadata>) -> Self {
+        let mut md5 = md5::Md5::new();
+        for file in files.iter() {
+            md5.update(&file.metadata.checksum);
+        }
+        let hash = format!("{:x}", md5.finalize());
+        Self {
+            checksum: hash,
+            files,
+        }
+    }
 }
 
 #[derive(Error, Debug)]
@@ -117,6 +132,7 @@ where
                                 })
                                 .collect::<Vec<HttpFileMetadata>>()
                         })
+                        .map(|files| Manifest::from(files))
                         .map(|result| json(&result))
                         .map_err(warp::reject::custom)
                 }
