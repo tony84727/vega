@@ -17,7 +17,11 @@ async fn main() {
 
     let http = HttpRepository::new(Arc::new(with_middleware), &config);
 
-    warp::serve(http.filters().with(warp::log("api")))
-        .run(([127, 0, 0, 1], 3030))
-        .await;
+    warp::serve(
+        http.filters()
+            .or(warp::path("music").and(warp::fs::dir("music")))
+            .with(warp::log("api")),
+    )
+    .run(([127, 0, 0, 1], 3030))
+    .await;
 }

@@ -1,0 +1,5 @@
+#!/bin/bash
+in=${1?"missing input (hashid)"}
+out=${2?"missing output path"}
+yt-dlp -f 140 "https://www.youtube.com/watch?v=$in" -o - | ffmpeg -i - -ar 24000 -f dfpwm "music/$out"
+# vim: sw=4 ts=4 expandtab
